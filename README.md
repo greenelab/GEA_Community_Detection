@@ -6,4 +6,4 @@ This repository reforms gene enrichment analysis using either the KEGG, Reactome
 
 ## Data Download
 
-The Data can be downloaded using the script and URL text file located in the Data Download Script folder. 
+Data for this project can be downloaded using the script and URL text file located in the Data Download Script folder. Please be sure to have the URL text file and bash script both in the same location. 
