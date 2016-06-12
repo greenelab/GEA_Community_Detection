@@ -12,4 +12,4 @@ Data for this project can be downloaded using the script and URL text file locat
 
 *About the code: Lia Harrington (lia.x.harrington.gr@dartmouth.edu)
 
-*About the project or collaboration: Jennifer Doherty, PhD (jennifer.a.doherty@dartmouth.edu) or Casey Greene at csgreene@mail.med.upenn.edu.
+*About the project or collaboration: Jennifer Doherty (jennifer.a.doherty@dartmouth.edu) or Casey Greene at (csgreene@mail.med.upenn.edu).
