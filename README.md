@@ -7,3 +7,8 @@ This repository reforms gene enrichment analysis using either the KEGG, Reactome
 ## Data Download
 
 Data for this project can be downloaded using the script and URL text file located in the Data Download Script folder. Please be sure to have the URL text file and bash script both in the same location. 
+
+## Contact
+
+About the code: Lia Harrington (lia.x.harrington.gr@dartmouth.edu)
+About the project or collaboration: Jennifer Doherty, PhD (jennifer.a.doherty@dartmouth.edu)
