@@ -153,38 +153,59 @@ def control_most_signif(iterations, num_paths, percent_path,
     '''
 
     random.seed(123)
-    total_false_positive = 0
-    successes = 0
+
+    # for calculating power
+    true_pos_nums = []
+    false_neg_nums = []
+
+    # for calculating false positive rate
+    false_pos_nums = []
+    true_neg_nums = []
 
     for iteration in range(iterations):
         # Randomly select a gene list
         gl_object = m_gene_list(num_paths, percent_path, percent_addit)
         selected_path_ids = gl_object[0]
+        #print selected_path_ids
         gene_list = gl_object[1]
 
         # results returns [sig_tup, signif (T/F), pvals, # signif]
         results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
 
-        # get the m most signif results
+        # the top m significant paths
         relevant_results = results[0][0:num_paths]
 
-        # extract path number
-        sig_paths = [relevant_results[i][0] for i in range(len(relevant_results))]
+        # list of top m paths
+        top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
 
-        # check if top m results equal to the m seeded paths
-        if sum([relevant_results[i][1] for i in range(len(relevant_results))]) == num_paths \
-        and set(sig_paths) == set(selected_path_ids):
-            successes += 1
+        # list of signif paths in the top m paths
+        top_signif_paths = [top_m_paths[i][0] for i in range(len(relevant_results))
+                            if top_m_paths[i][1]]
 
-        total_positive = sum(results[1])
+        # paths that are not in the top m and signif
+        non_top_paths = set.difference(set(range(len(PATH_GENES))), set(top_signif_paths))
 
-        # subtract out corectly detected paths from all detected
-        correct_sig_paths = len((set(selected_path_ids).intersection(set(sig_paths))))
-        total_false_positive += total_positive - correct_sig_paths
+        true_pos = set.intersection(set(selected_path_ids), set(top_signif_paths))
+        false_pos = set.difference(set(top_signif_paths), set(true_pos))
 
-    power = float(successes)/iterations
-    avg_false_pos = float(total_false_positive) / iterations
-    return [power, avg_false_pos]
+        false_neg = set.intersection(non_top_paths, selected_path_ids)
+
+        true_pos_nums.append(float(len(true_pos)))
+        false_pos_nums.append(float(len(false_pos)))
+
+        false_neg_nums.append(float(len(false_neg)))
+        true_neg_nums.append(float(len(PATH_GENES)- (true_pos_nums[-1]
+                                                     +false_pos_nums[-1]+false_neg_nums[-1])))
+
+    power = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
+    false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
+
+    return ['Power: {0}'.format(round(power, 3)),
+            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
+            'Total true positive: {0}'.format(sum(true_pos_nums)),
+            'Total false positive: {0}'.format(sum(false_pos_nums)),
+            'TP to FP ratio: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
+
 # ---------------------------------------------------------------------------
 #                               Experimental Arm
 # Performs N experiments of draws m pathways from ontology and prints the
@@ -221,8 +242,11 @@ def experimental_most_signif(iterations, com_method, num_paths, percent_path,
     '''
 
     random.seed(123)
-    total_false_positive = 0
-    successes = 0
+
+    true_pos_nums = []
+    false_pos_nums = []
+    false_neg_nums = []
+    true_neg_nums = []
 
     for iteration in range(iterations):
         # Randomly select a gene list
@@ -240,188 +264,43 @@ def experimental_most_signif(iterations, com_method, num_paths, percent_path,
             if len(com) >= min_com_size:
                 cd_com_lst.append(com)
 
-        selected_com_ids = set(selected_path_ids)  # make path ids a set
-        detected_com = []
-
+        top_paths = []
+        non_top_paths = []
         for com in cd_com_lst:  # for each community, do enrichment
+
             results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
-            total_positive = sum(results[1])  # sum of T/F list
 
-            # results returns [sig_tup, signif (T/F), pvals, # signif]
-            # sig tup has form (path_id, T/F enriched)
-            # results[0][1][1] is most sig enriched tuple getting T/F value
+            top_path = results[0][0][0]
 
-            if results[0][1][1]:  # checks if the top result is significant
-                # if yes, then set most_enriched to path id
-                most_enriched = results[0][0][0]
-            else:
-                most_enriched = 'None'
+            top_paths.append(top_path)
 
-            detected = 0
-            # if most_enriched a seeded path, then correct detection
-            if most_enriched in selected_path_ids:
-                detected = 1
-            else:
-                detected = 0
+            nt_paths = set.difference(set(range(len(PATH_GENES))), set([top_path]))
 
-            # for any given iteration, this will always be 1 or 0
-            total_false_positive += total_positive - detected
+            non_top_paths.extend(nt_paths)
 
-            detected_com.append(most_enriched)
+        pos_lst = set(top_paths)
 
-        detected_com = set(detected_com)
+        neg_lst = set.difference(set(non_top_paths), pos_lst)
 
-        # number found paths equal to num of seeded pathss
-        if detected_com == selected_com_ids:
-            successes += 1
+        true_pos = set.intersection(set(selected_path_ids), set(pos_lst))
 
-    power = float(successes)/iterations
-    avg_false_pos = float(total_false_positive) / iterations
-    return [power, avg_false_pos]
-# ---------------------------------------------------------------------------
-#                       GOAL: ALL SIGNIFICANT PATHWAYS
-# ---------------------------------------------------------------------------
-#                               Control Arm
-# Performs N experiments of draws m pathways from ontology and prints the
-# number of false positives and power accounting only the most significanlty
-# enriched path without using community detection.
-# ---------------------------------------------------------------------------
+        false_pos = set.difference(set(pos_lst), set(selected_path_ids))
 
+        false_neg = set.intersection(set(neg_lst), set(selected_path_ids))
 
-def control_all_signif(iterations, num_paths, percent_path, percent_addit,
-                       alpha):
-    '''
-    Description
-    :Simulation of N iterations of m chosen paths using n% of each path with a%
-    additional random genes.
+        true_neg = set.difference(set(range(len(PATH_GENES))), set.union(
+            true_pos, false_pos, false_neg))
 
-    Arguments
-    :param iterations: number of desired iterations of experiment
-    :param num_paths: number of paths that should be randomly selected
-    :param percent_path: value [0,1] of proportion of genes in each selected
-    path taken
-    :param percent_addit: value [0,1] of proportion of each pathway of
-    random extra genes from the ontology that should be added
-    :param alpha: desired alpha level, usually .05 is chosen
+        true_pos_nums.append(float(len(true_pos)))
+        false_pos_nums.append(float(len(false_pos)))
+        false_neg_nums.append(float(len(false_neg)))
+        true_neg_nums.append(float(len(true_neg)))
 
-    Output
-    :Returns the average power and false positives. Power and
-    success here is defined for if the m signif paths returned are the
-    seeded paths.
+    power = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
+    false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
 
-    '''
-
-    total_false_positive = 0
-    successes = 0
-
-    random.seed(123)
-    for iteration in range(iterations):
-        # Randomly select a gene list
-        gl_object = m_gene_list(num_paths, percent_path, percent_addit)
-        selected_path_ids = gl_object[0]
-        gene_list = gl_object[1]
-
-        successful_enrichment = 0
-
-        results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
-
-        for selected_path in selected_path_ids:
-            if results[1][selected_path]:
-                successful_enrichment += 1
-
-        if successful_enrichment == num_paths:
-            successes += 1
-
-        total_positive = sum(results[1])
-        total_false_positive += total_positive - successful_enrichment
-
-    power = float(successes)/iterations
-    avg_false_pos = float(total_false_positive) / iterations
-    return [power, avg_false_pos]
-# ---------------------------------------------------------------------------
-#                           Experimental Arm
-# Performs N experiments of drawing m pathways from ontology. Community
-# detection is performed on the gene list and the resulting number of false
-# positives and power accounting all significanlty enriched paths are returned.
-# ---------------------------------------------------------------------------
-
-def experimental_all_signif(iterations, com_method, num_paths, percent_path,
-                            percent_addit, weights, alpha, min_com_size):
-
-    '''
-    Description
-    :Simulation of N iterations of m chosen paths using n% of each path with a%
-    additional random genes.
-
-    Arguments
-    :param iterations: number of desired iterations of experiment
-    :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
-    'multilevel'
-    :param num_paths: number of paths that should be randomly selected
-    :param percent_path: value [0,1] of proportion of genes in each selected
-    path taken
-    :param percent_addit: value [0,1] of proportion of each pathway of
-    random extra genes from the ontology that should be added
-    :param weights: Weights can either be IMP weights using WEIGHTS w/o quotes or
-    no weights using "NULL". Note n can't be too small for the community detection
-    :param alpha: desired alpha level, usually .05 is chosen
-    :param min_com_size: minimize number of genes in an acceptable community
-
-    Output
-    :Returns the average power and false positives. Power and
-    success here is defined for if the m signif paths returned are the
-    seeded paths.
-
-    '''
-
-    total_false_positive = 0
-    successes = 0
-
-    random.seed(123)
-    for iteration in range(iterations):
-        # Randomly select a gene list
-        gl_object = m_gene_list(num_paths, percent_path, percent_addit)
-        selected_path_ids = gl_object[0]
-        gene_list = gl_object[1]
-
-        # find communities of genes
-        cd_genes = community_detection(gene_list, com_method, weights)
-        cd_genes_lst = index_to_edge_name(cd_genes)
-
-        # keep communities with at least min_com_size genes
-        cd_com_lst = []
-        for com in cd_genes_lst:
-            if len(com) >= min_com_size:
-                cd_com_lst.append(com)
-
-        # make path ids a set
-        selected_com_ids = set(selected_path_ids)
-
-        detected_com = set()
-        # for each community, do enrichment
-        for com in cd_com_lst:
-            results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
-            total_positive = sum(results[1])
-
-            # create list of only signif results
-            results2 = []
-            for result in range(len(results)):
-                if results[0][result][1]:
-                    results2.append(results[0][result])
-
-            # path ids of significant paths
-            enrich_path_ids = set([results2[re][0] for re in range(len(results2))])
-
-            # set of paths seeded also found
-            sig_seeded_paths = selected_com_ids.intersection(enrich_path_ids)
-            detected_com = set(detected_com.union(sig_seeded_paths))
-
-            total_false_positive += total_positive - len(sig_seeded_paths)
-
-        # number found paths equal to num of seeded pathss
-        if detected_com == selected_com_ids:
-            successes += 1
-
-    power = float(successes)/iterations
-    avg_false_pos = float(total_false_positive) / iterations
-    return [power, avg_false_pos]
+    return ['Power: {0}'.format(round(power, 3)),
+            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
+            'Total true positive: {0}'.format(sum(true_pos_nums)),
+            'Total false positive: {0}'.format(sum(false_pos_nums)),
+            'TP to FP ratio: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
