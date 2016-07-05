@@ -125,96 +125,28 @@ def write_gene_list(gene_list, text_fh):
 #                       GOAL: MOST SIGNIFICANT PATHWAY
 # ---------------------------------------------------------------------------
 #                               Control Arm
-# Performs N experiments of draws m pathways from ontology and prints the
-# number of false positives and power accounting only the most significanlty
-# enriched path without using community detection.
+# Performs N experiments drawing m pathways using n% of the genes in each pathway
+# with an additional a% random genes from ontology and returns the
+# power, false positive rate, total true positive, total false positive, and
+# TP to FP ratio. The output will look something like this:
+
+#['Power: 0.683',
+# 'False positive rate: 0.00109.',
+# 'Total true positive: 41.0',
+# 'Total false positive: 4.0',
+# 'TP to FP ratio: 10.25']
+
+
+#For the control arm, no community detection is performed and one can simply
+# fill in the first four paramters as the other paramters concerining
+# The experimental arm default to None. When performing the experimental arm,
+# be sure to compelte all default paramters except alpha, unless a different
+# level is desired.
 # ---------------------------------------------------------------------------
 
-def control_most_signif(iterations, num_paths, percent_path,
-                        percent_addit, alpha):
-    '''
-    Description
-    :Simulation of N iterations of m chosen paths using n% of each path with a%
-    additional random genes.
-
-    Arguments
-    :param iterations: number of desired iterations of experiment
-    :param num_paths: number of paths that should be randomly selected
-    :param percent_path: value [0,1] of proportion of genes in each selected
-    path taken
-    :param percent_addit: value [0,1] of proportion of each pathway of
-    random extra genes from the ontology that should be added
-    :param alpha: desired alpha level, lusually .05 is chosen
-
-    Output
-    :Returns the average power and false positives. Power and
-    success here is defined for if the most signif paths is the seeded path.
-
-    '''
-
-    random.seed(123)
-
-    # for calculating power
-    true_pos_nums = []
-    false_neg_nums = []
-
-    # for calculating false positive rate
-    false_pos_nums = []
-    true_neg_nums = []
-
-    for iteration in range(iterations):
-        # Randomly select a gene list
-        gl_object = m_gene_list(num_paths, percent_path, percent_addit)
-        selected_path_ids = gl_object[0]
-        #print selected_path_ids
-        gene_list = gl_object[1]
-
-        # results returns [sig_tup, signif (T/F), pvals, # signif]
-        results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
-
-        # the top m significant paths
-        relevant_results = results[0][0:num_paths]
-
-        # list of top m paths
-        top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
-
-        # list of signif paths in the top m paths
-        top_signif_paths = [top_m_paths[i][0] for i in range(len(relevant_results))
-                            if top_m_paths[i][1]]
-
-        # paths that are not in the top m and signif
-        non_top_paths = set.difference(set(range(len(PATH_GENES))), set(top_signif_paths))
-
-        true_pos = set.intersection(set(selected_path_ids), set(top_signif_paths))
-        false_pos = set.difference(set(top_signif_paths), set(true_pos))
-
-        false_neg = set.intersection(non_top_paths, selected_path_ids)
-
-        true_pos_nums.append(float(len(true_pos)))
-        false_pos_nums.append(float(len(false_pos)))
-
-        false_neg_nums.append(float(len(false_neg)))
-        true_neg_nums.append(float(len(PATH_GENES)- (true_pos_nums[-1]
-                                                     +false_pos_nums[-1]+false_neg_nums[-1])))
-
-    power = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
-    false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
-
-    return ['Power: {0}'.format(round(power, 3)),
-            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
-            'Total true positive: {0}'.format(sum(true_pos_nums)),
-            'Total false positive: {0}'.format(sum(false_pos_nums)),
-            'TP to FP ratio: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
-
-# ---------------------------------------------------------------------------
-#                               Experimental Arm
-# Performs N experiments of draws m pathways from ontology and prints the
-# number of false positives and power accounting only the most significanlty
-# enriched path using community detection.
-# ---------------------------------------------------------------------------
-
-def experimental_most_signif(iterations, com_method, num_paths, percent_path,
-                             percent_addit, weights, alpha, min_com_size):
+def gsea_performance(iterations, num_paths, percent_path, percent_addit,
+                     control=True, com_method=None, weights=None,
+                     min_com_size=None, alpha=.05):
     '''
     Description
     :Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -222,8 +154,10 @@ def experimental_most_signif(iterations, com_method, num_paths, percent_path,
 
     Arguments
     :param iterations: number of desired iterations of experiment
+    : param control: True/False and indicates if control or experimental condition
+    : must set to False if experimental condition desired
     :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
-    'multilevel'
+    'multilevel', defaults to None if control condition
     :param num_paths: number of paths that should be randomly selected
     :param percent_path: value [0,1] of proportion of genes in each selected
     path taken
@@ -231,9 +165,10 @@ def experimental_most_signif(iterations, com_method, num_paths, percent_path,
     random extra genes from the ontology that should be added
     :param weights: Weights can either be IMP weights using WEIGHTS w/o quotes or
     no weights using "NULL". Note n can't be too small for the community detection
-    methods because insufficent genes to create network.
-    :param alpha: desired alpha level, usually .05 is chosen
-    :param min_com_size: minimize number of genes in an acceptable community
+    methods because insufficent genes to create network. Defaults to None if control.
+    :param min_com_size: minimize number of genes in an acceptable community.
+    Defaults to None if control.
+    :param alpha: desired alpha level, defaults to 0.05
 
     Output
     :Returns the average power and false positives. Power and
@@ -254,42 +189,61 @@ def experimental_most_signif(iterations, com_method, num_paths, percent_path,
         selected_path_ids = gl_object[0]
         gene_list = gl_object[1]
 
-        # find communities of genes
-        cd_genes = community_detection(gene_list, com_method, weights)
-        cd_genes_lst = index_to_edge_name(cd_genes)
+        if control:
+            # results returns [sig_tup, signif (T/F), pvals, # signif]
+            results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
 
-        # keep communities with at min community size
-        cd_com_lst = []
-        for com in cd_genes_lst:
-            if len(com) >= min_com_size:
-                cd_com_lst.append(com)
+            # the top m significant paths
+            relevant_results = results[0][0:num_paths]
 
-        top_paths = []
-        non_top_paths = []
-        for com in cd_com_lst:  # for each community, do enrichment
+            # list of top m paths
+            top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
 
-            results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
+            # list of signif paths in the top m paths
+            top_signif_paths = [top_m_paths[i][0] for i in range(len(relevant_results))
+                                if top_m_paths[i][1]]
 
-            top_path = results[0][0][0]
+            # paths that are not in the top m and signif
+            non_top_paths = set(range(len(PATH_GENES))).difference(set(top_signif_paths))
 
-            top_paths.append(top_path)
+        elif not control:
+            # find communities of genes
+            cd_genes = community_detection(gene_list, com_method, weights)
+            cd_genes_lst = index_to_edge_name(cd_genes)
 
-            nt_paths = set.difference(set(range(len(PATH_GENES))), set([top_path]))
+            cd_com_lst = []
+            for com in cd_genes_lst:
+            # keep communities with at min community size
+                if len(com) >= min_com_size:
+                    cd_com_lst.append(com)
 
-            non_top_paths.extend(nt_paths)
+            top_signif_paths = []
+            nonsig_paths = []
+            for com in cd_com_lst:  # for each community, do enrichment
 
-        pos_lst = set(top_paths)
+                results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
 
-        neg_lst = set.difference(set(non_top_paths), pos_lst)
+                top_path = results[0][0][0]
 
-        true_pos = set.intersection(set(selected_path_ids), set(pos_lst))
+                if results[0][0][1]:
+                    top_signif_paths.append(top_path)
 
-        false_pos = set.difference(set(pos_lst), set(selected_path_ids))
 
-        false_neg = set.intersection(set(neg_lst), set(selected_path_ids))
+                ns_paths = set(range(len(PATH_GENES))).difference(set([top_path]))
+                nonsig_paths.extend(ns_paths)
 
-        true_neg = set.difference(set(range(len(PATH_GENES))), set.union(
-            true_pos, false_pos, false_neg))
+            top_signif_paths = set(top_signif_paths)
+
+            non_top_paths = set(nonsig_paths).difference(set(top_signif_paths))
+
+        true_pos = set(selected_path_ids).intersection(set(top_signif_paths))
+
+        false_pos = set(top_signif_paths).difference(set(selected_path_ids))
+
+        false_neg = set(non_top_paths).intersection(set(selected_path_ids))
+
+        true_neg = set(range(len(PATH_GENES))).difference(set.union(true_pos,
+                                                                    false_pos, false_neg))
 
         true_pos_nums.append(float(len(true_pos)))
         false_pos_nums.append(float(len(false_pos)))
