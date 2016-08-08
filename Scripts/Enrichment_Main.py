@@ -26,65 +26,26 @@ execfile('enrichment_testing.py')
 # Note: Control_most_signif and Experimental_most_signif from Enrichment_Testing
 
 import numpy as np
+import matplotlib.pyplot as plt
 
-def run_test(iterations, exp_type, com_method, weights, min_com_size, alpha=.05):
+def param_sweep(iterations, num_paths_min, num_paths_max, percent_min,
+                percent_max, addit_min, addit_max):
     '''
     Description
-    :runs an enrichment test using either control or experimental community
-    :detection methods
-
-    Arguments
-    :param iterations: number of desired iterations of experiment
-    :param exp_type: specifies if should be 'ctr_all' (all significant pathways),
-    :'ctr_m' (only top m signif pathways), or 'exp'
-    :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
-    'multilevel'
-    :param weights: Weights can either be IMP WEIGHTS using weights w/o quotes or
-    no weights using None.
-    :param min_com_size: if using community detection, 3 should be default
-    :param alpha: desired alpha level, usually .05 is chosen
-
-    Output
-    :returns a list of all the TP/FP rate [[ 0.233], [ 0.18 ], ...] and the
-    :combination of number of pathways selected, percentage of pathway chosen,
-    :percentage of additional genes in format
-    :[(3, 0.3, 0.1), (3, 0.3, 0.25), ...] where the first tuple is 3 paths,
-    :using 30% of genes, and 10% additional random genes. The labels are used
-    :in the other functions below for formatting output
-
-    '''
-
-    num_rows = len(np.linspace(.3, 1, 5))*len(np.linspace(.1, .7, 5))
-    reps = len(range(3, 5))
-    tot_rows = num_rows*reps
-
-    results = np.zeros([tot_rows, 1])
-
-    labels = []
-
-    row = 0
-    for num_paths in range(3, 5):
-        for percent_path in np.linspace(.3, 1, 5):  # from 30% to 100%
-            for percent_addit in np.linspace(.1, .7, 5): # from 10% to 70%
-                results[row][0] = gsea_performance(iterations,
-                                                   num_paths, percent_path,
-                                                   percent_addit,
-                                                   exp_type, com_method, weights,
-                                                   min_com_size, alpha=.05)[4]
-                labels.append((num_paths, round(percent_path, 3),
-                               round(percent_addit, 3)))
-                row += 1
-
-    return [results, labels]
-
-def param_sweep(iterations):
-    '''
-    Description
-    :performs paramter sweep over control and experimental methods selecting
+    performs paramter sweep over control and experimental methods
 
     Arguments
     :param iterations: number of iterations to run each case
-
+    :param num_paths_min: min number of paths, cannot be zero
+    :param num_paths_max: max number of paths, cannot be greater than length
+    :of ontology
+    :param percent_min: min percent of genes in each pathway taken, lowest
+    :reccomended is .3 for community detection construction
+    ::param percent_max: max percent of genes in each pathway taken, can be up
+    :to 1
+    :param addit_min: min percent of additional random genes added
+    :param addit_max: max percent of additional random genes added, use intution,
+    :but more than .7 may become less realistic
 
     Output
     :matrix of every num_paths, percent_path, and percent_addit combination
@@ -93,50 +54,73 @@ def param_sweep(iterations):
 
     '''
 
-    # len of all combinations of num_paths, percent_path, percent_addit
-    num_rows = len(np.linspace(.3, 1, 5))*len(range(3, 5))
+    # 5 chosen because unlikely want more than 5 possible percentage levels,
+    # but this can be changed
+    num_rows = len(np.linspace(percent_min,
+                               percent_max, 5))*len(np.linspace(addit_min, addit_max, 5))
 
-    # 6 methods (2 control, 4 community)
-    num_cols = 6
+    reps = len(range(num_paths_min, num_paths_max))
 
-    comparison_results = np.zeros((num_rows, num_cols))
+    tot_rows = num_rows*reps
 
-    ctr_all = run_test(iterations, 'ctr_all', None, None, .05, None)
-    ctr_m = run_test(iterations, 'ctr_m', None, None, .05, None)
-    fg = run_test(iterations, 'exp', 'fastgreedy', None, .05, 3)
-    wt = run_test(iterations, 'exp', 'walktrap', None, .05, 3)
-    im = run_test(iterations, 'exp', 'infomap', None, .05, 3)
-    ml = run_test(iterations, 'exp', 'multilevel', None, .05, 3)
-
-    labels = ctr_all[1]  # grab labels from first, same for all methods
+    ctr_all = np.zeros([tot_rows, 1])
+    ctr_m = np.zeros([tot_rows, 1])
+    fg = np.zeros([tot_rows, 1])
+    wt = np.zeros([tot_rows, 1])
+    im = np.zeros([tot_rows, 1])
+    ml = np.zeros([tot_rows, 1])
+    
+    labels = []
+    row = 0
+    for num_paths in range(num_paths_min, num_paths_max):
+        for percent_path in np.linspace(percent_min, percent_max, 5):
+            for percent_addit in np.linspace(addit_min, addit_max, 5):
+                ctr_all[row] = gsea_performance(iterations, num_paths,
+                                                percent_path, percent_addit,
+                                                'ctr_all', None, None, None, .05)[4]
+                ctr_m[row] = gsea_performance(iterations, num_paths, percent_path,
+                                              percent_addit, 'ctr_m', None, None, None, .05)[4]
+                fg[row] = gsea_performance(iterations, num_paths, percent_path,
+                                           percent_addit, 'exp', 'fastgreedy', None, 3, .05)[4]
+                wt[row] = gsea_performance(iterations, num_paths, percent_path,
+                                           percent_addit, 'exp', 'walktrap', None, 3, .05)[4]
+                im[row] = gsea_performance(iterations, num_paths, percent_path,
+                                           percent_addit, 'exp', 'infomap', None, .05)[4]
+                ml[row] = gsea_performance(iterations, num_paths, percent_path,
+                                           percent_addit, 'exp', 'multilevel', None, 3, .05)[4]
+                labels.append((num_paths, round(percent_path, 3),
+                               round(percent_addit, 3)))
+                row += 1
 
     # the first row is labels and the other
-    param_results = np.concatenate((ctr_all[0], ctr_m[0], fg[0],
-                                    wt[0], im[0], ml[0]), axis=1)
+    param_results = np.concatenate((ctr_all, ctr_m, fg,
+                                    wt, im, ml), axis=1)
+
+    #param_results = np.concatenate((ctr_all, ctr_m), axis = 1)
 
     return [param_results, labels]
 
 def param_summary(sweep_object):
     '''
     Description
-    :provides summary of which method is top performing over all methods
-    :and parameter variations and also provides which method is best at each
-    :level of paramter/method combination
+    provides summary of which method is top performing over all methods
+    and parameter variations and also provides which method is best at each
+    level of paramter/method combination
 
     Arguments
-    :object created from using param_sweep()
+    :param sweep_object: object created from using param_sweep()
 
     Output
     :prints dictionary of count of each method and how many times it was
     :best performing method (highest TP/FP ratio), prints the single best
     :method and count, returns for each (num_paths, percent_path, percent_addit)
-    :tuple, the associated best performing method
+    :tuple, the associated best performing method. Additionally, plots bar graph
+    :of count of when each method had highest TP/FP ratio and exports dictionary
+    :data as a tab deliminated csv
 
     '''
 
-    param_nums = sweep_object[0]
-
-    param_labels = sweep_object[1]
+    param_nums, param_labels = sweep_object
 
     location_dict = dict.fromkeys(range(0, 6), 0)
 
@@ -164,6 +148,18 @@ def param_summary(sweep_object):
 
     print labeled_locations
 
+    # save dictionary as dataframe and output as csv
+    pd.DataFrame(labeled_locations.items(),
+                 columns=['Method', 'Frequency']).to_csv('labeled_locations.csv')
+
+    # make barplot of methods and TP/FP ratio count
+    plt.bar(range(len(labeled_locations)), labeled_locations.values(),
+            align='center', color='w')
+    plt.xticks(range(len(labeled_locations)), labeled_locations.keys())
+    plt.ylabel('Frequency best TP/FP ratio')
+    plt.xlabel('Method')
+    plt.show()
+
     print '-------- Best performing methods --------'
 
     print max_methods  # looks like [('fg', 33)]
@@ -190,6 +186,10 @@ def param_summary(sweep_object):
         if combinations[item] == 5:
             combinations[item] = 'ml'
 
+    # save dictionary as dataframe and output as csv
+    pd.DataFrame(combinations.items(),
+                 columns=['Method', 'Frequency']).to_csv('combinations.csv')
+
     print '-------- Best method for each path number and path percentage combo --------'
 
 # sample output for combinations:
@@ -204,14 +204,16 @@ def param_summary(sweep_object):
     return combinations  # returns used so that each paramater level combo
                          # gets own line
 
-def times_better(sweep_object):
+def times_better(sweep_object, reference_method):
     '''
     Description
-    :from inital runs, fg appears to be best method so this finds the ratio of
-    :TP/FP of the 'fg' to 'ctr_all' methods
+    from chosen reference_method, finds the ratio TP/FP ratio compared to
+    all other methods including itself
 
     Arguments
-    :object created from using param_sweep()
+    :param sweep_object: object created from using param_sweep()
+    :param reference_method: method that is the reference for the other methods
+    :to be compared against. can be 'ctr_all', 'ctr_m', 'fg', 'wt', 'im', 'ml'
 
     Output
     :average ratio of the TP/FP for the 'fg' and 'ctr_all' methods over all the
@@ -221,13 +223,42 @@ def times_better(sweep_object):
 
     param_nums = sweep_object[0]
 
-    ratios = []
+    names = ['ctr_all', 'ctr_m', 'fg', 'wt', 'im', 'ml']
+
+    reference_location = names.index(reference_method)
+
+    ctr_all = []
+    ctr_m = []
+    fg = []
+    wt = []
+    im = []
+    ml = []
+
+    methods = [ctr_all, ctr_m, fg, wt, im, ml]
 
     for combination in param_nums:
         # 'ctr_all' is the first method and 'fg' is the third method
-        ratios.append(float(round(combination[2]/combination[0], 2)))
+        ctr_all.append(combination[reference_location]/combination[0])
+        ctr_m.append(combination[reference_location]/combination[1])
+        fg.append(combination[reference_location]/combination[2])
+        wt.append(combination[reference_location]/combination[3])
+        im.append(combination[reference_location]/combination[4])
+        ml.append(combination[reference_location]/combination[5])
 
-    mean_ratio = np.mean(ratios)
+    tb_dict = dict()
+    for m in range(len(methods)):
+        tb_dict[names[m]] = np.mean(methods[m])
 
-    print 'On average the fastgreedy method is {0} times better than the \
-    control using all signif paths.'.format(mean_ratio)
+    # save dictionary as dataframe and output as csv
+    pd.DataFrame(tb_dict.items(),
+                 columns=['Method', 'Ratio']).to_csv('tb_dict.csv')
+
+    # plots bar graph of ratio of TP/FP of each method to chosen reference
+    # method
+    plt.bar(range(len(tb_dict)), tb_dict.values(), align='center', color='w')
+    plt.xticks(range(len(tb_dict)), tb_dict.keys())
+    plt.ylabel('Ratio of TP/FP to reference method')
+    plt.xlabel('Method')
+    plt.show()
+
+    print tb_dict
