@@ -24,7 +24,7 @@ from scipy.stats import hypergeom
 def enrichment(gene_list, ontology, alpha, all_genes):
     '''
     Description
-    : Performs gene enrichment analysis
+    Performs gene enrichment analysis
 
     Arguments
     :param geneList: a list of genes (can be created using m_gene_list())
@@ -80,7 +80,7 @@ def enrichment(gene_list, ontology, alpha, all_genes):
 def m_gene_list(num_paths, percent_path, percent_addit):
     '''
     Description
-    :creates a gene list to input into the Enrichment function
+    creates a gene list to input into the Enrichment function
 
     Arguments
     :param num_paths: integer value of number of desired chosen paths
@@ -107,7 +107,7 @@ def m_gene_list(num_paths, percent_path, percent_addit):
 def write_gene_list(gene_list, text_fh):
     '''
     Description
-    :Writes the current gene list to the specified file name.
+    Writes the current gene list to the specified file name.
 
     Arguments
     : param geneList: an input list of gene names
@@ -145,11 +145,11 @@ def write_gene_list(gene_list, text_fh):
 # ---------------------------------------------------------------------------
 
 def gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                     control=True, com_method=None, weights=None,
+                     exp_type='control_all', com_method=None, weights=None,
                      min_com_size=None, alpha=.05):
     '''
     Description
-    :Simulation of N iterations of m chosen paths using n% of each path with a%
+    Simulation of N iterations of m chosen paths using n% of each path with a%
     additional random genes using community detection
 
     Arguments
@@ -175,15 +175,6 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     success here is defined for if the most signif paths is the seeded path.
 
     '''
-    iterations = 100
-    num_paths = 3
-    percent_path = 1
-    percent_addit = 0
-    control = False
-    com_method = 'fastgreedy'
-    weights = 'NULL'
-    min_com_size = 3
-    alpha = .05
 
     random.seed(123)
 
@@ -199,8 +190,18 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
         set_selected_pathids = set(selected_path_ids)
         gene_list = gl_object[1]
 
-        if control:
+        if exp_type == 'ctr_all': # get all signif paths
             # results returns [sig_tup, signif (T/F), pvals, # signif]
+            results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
+
+            top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
+                           results[0][i][1]])
+
+            non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
+
+
+        elif exp_type == 'ctr_m':  # get signif paths in top m
+
             results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
 
             # the top m significant paths
@@ -214,9 +215,9 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
                                 if top_m_paths[i][1]])
 
             # paths that are not in the top m and signif
-            non_top_paths = set(range(len(PATH_GENES))).difference(set(top_signif_paths))
+            non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
 
-        elif not control:
+        elif exp_type == 'exp':
             # find communities of genes
             cd_genes = community_detection(gene_list, com_method, weights)
             cd_genes_lst = index_to_edge_name(cd_genes)
@@ -235,10 +236,10 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 
                 if results[0][0][1]:  # is the top path significant? (T/F)
                     top_signif_paths.add(top_path)
-                
+
                 ns_paths = set.difference(set(range(len(PATH_GENES))), set([top_path]))
                 nonsig_paths = nonsig_paths.union(ns_paths)
-                
+
             non_top_paths = nonsig_paths.difference(top_signif_paths)
 
         true_pos = set_selected_pathids.intersection(top_signif_paths)
@@ -258,8 +259,14 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     power = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
     false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
 
-    print ['Power: {0}'.format(round(power, 3)),
-            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
-            'Total true positive: {0}'.format(sum(true_pos_nums)),
-            'Total false positive: {0}'.format(sum(false_pos_nums)),
-            'TP to FP ratio: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
+#    return ['Power: {0}'.format(round(power, 3)),
+#            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
+#            'Total true positive: {0}'.format(sum(true_pos_nums)),
+#            'Total false positive: {0}'.format(sum(false_pos_nums)),
+#            'TP/FP: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
+
+    return [round(power, 3),
+            round(false_pos_rate, 5),
+            sum(true_pos_nums),
+            sum(false_pos_nums),
+            round(sum(true_pos_nums)/sum(false_pos_nums), 3)]
