@@ -12,19 +12,20 @@ and Community_Detection
 
 Description:
 
-Runs simulations of of specified iterations using a gene list with n% of
+Runs simulations of specified iterations using a gene list with n% of
 m number of path and an additional a% added genes. Control involves standard
 enrichment analysis whereas Experimental invokes community detection before
 enrichment analyses.
 
 """
 
-execfile('ontology_prep.py')
-execfile('community_detection.py')
-execfile('enrichment_testing.py')
+execfile('./Scripts/ontology_prep.py')
+execfile('./Scripts/community_detection.py')
+execfile('./Scripts/enrichment_testing.py')
 
 # Note: Control_most_signif and Experimental_most_signif from Enrichment_Testing
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -69,7 +70,7 @@ def param_sweep(iterations, num_paths_min, num_paths_max, percent_min,
     wt = np.zeros([tot_rows, 1])
     im = np.zeros([tot_rows, 1])
     ml = np.zeros([tot_rows, 1])
-    
+
     labels = []
     row = 0
     for num_paths in range(num_paths_min, num_paths_max):
@@ -95,8 +96,6 @@ def param_sweep(iterations, num_paths_min, num_paths_max, percent_min,
     # the first row is labels and the other
     param_results = np.concatenate((ctr_all, ctr_m, fg,
                                     wt, im, ml), axis=1)
-
-    #param_results = np.concatenate((ctr_all, ctr_m), axis = 1)
 
     return [param_results, labels]
 
@@ -134,11 +133,11 @@ def param_summary(sweep_object):
     # output for location_dict looks like
     # {0: 0, 1: 4, 2: 33, 3: 0, 4: 5, 5: 8}
 
-    method_labels = dict.fromkeys(['ctr_all', 'ctr_m', 'fg', 'wt', 'im', 'ml'])
+    method_labels = ['ctr_all', 'ctr_m', 'fg', 'wt', 'im', 'ml']
 
     # converts location_dict numbered methods to abreviations
     # output looks like: {'ctr_all': 0, 'ctr_m': 4, 'fg': 33, 'im': 0, 'ml': 5, 'wt': 8}
-    labeled_locations = {sorted(method_labels.keys())[i]:location_dict[i]
+    labeled_locations = {sorted(dict.fromkeys(method_labels).keys())[i]:location_dict[i]
                          for i in range(len(location_dict))}
 
     maxx = max(location_dict.values())
@@ -149,8 +148,13 @@ def param_summary(sweep_object):
     print labeled_locations
 
     # save dictionary as dataframe and output as csv
+    try:
+        os.mkdir('results')
+    except:
+        print 'Results folder already exists'
+
     pd.DataFrame(labeled_locations.items(),
-                 columns=['Method', 'Frequency']).to_csv('labeled_locations.csv')
+                 columns=['Method', 'Frequency']).to_csv('./results/labeled_locations.csv')
 
     # make barplot of methods and TP/FP ratio count
     plt.bar(range(len(labeled_locations)), labeled_locations.values(),
@@ -164,47 +168,31 @@ def param_summary(sweep_object):
 
     print max_methods  # looks like [('fg', 33)]
 
-    param_dict = dict.fromkeys(param_labels)
-    combinations = {}
-    for row in range(len(param_labels)):
+    combinations = []
+    for  row in range(len(param_labels)):
+        # find where max TP/FP ratio is
         location = list(param_nums[row]).index(max(param_nums[row]))
-        combinations[param_dict.keys()[row]] = location
-
-    # converts all the numbers (0-5) which code for each of the 6 methods
-    # to more readible abreviations
-    for item in combinations:
-        if combinations[item] == 0:
-            combinations[item] = 'ctr_all'
-        if combinations[item] == 1:
-            combinations[item] = 'ctr_m'
-        if combinations[item] == 2:
-            combinations[item] = 'fg'
-        if combinations[item] == 3:
-            combinations[item] = 'wt'
-        if combinations[item] == 4:
-            combinations[item] = 'im'
-        if combinations[item] == 5:
-            combinations[item] = 'ml'
+        # what method is location associated with?
+        identifier = method_labels[location]
+        # set method to paramter level combo
+        combinations.append((param_labels[row], identifier))
 
     # save dictionary as dataframe and output as csv
-    pd.DataFrame(combinations.items(),
-                 columns=['Method', 'Frequency']).to_csv('combinations.csv')
+    pd.DataFrame(combinations,
+                 columns=['Combination', 'Method']).to_csv('./results/combinations.csv')
 
     print '-------- Best method for each path number and path percentage combo --------'
 
-# sample output for combinations:
-#
-#    {(3, 0.3, 0.1): 'ml',
-#     (3, 0.3, 0.25): 'fg',
-#     (3, 0.3, 0.4): 'fg'}
-#
+#[((3, 0.3, 0.1), 'ml'),
+# ((3, 0.3, 0.25), 'im'),
+# ((3, 0.3, 0.4), 'fg'),...]
 # best method for (3, .3, .1) using 3 pathways, 30% of genes, and 10% additional
-# genes is 'ml' which is multilevel etc
+# genes is 'ml,' which is multilevel etc
 
     return combinations  # returns used so that each paramater level combo
                          # gets own line
 
-def times_better(sweep_object, reference_method):
+def rate_ratio(sweep_object, reference_method):
     '''
     Description
     from chosen reference_method, finds the ratio TP/FP ratio compared to
@@ -227,31 +215,31 @@ def times_better(sweep_object, reference_method):
 
     reference_location = names.index(reference_method)
 
-    ctr_all = []
-    ctr_m = []
-    fg = []
-    wt = []
-    im = []
-    ml = []
-
-    methods = [ctr_all, ctr_m, fg, wt, im, ml]
+    methods = [[] for _ in range(len(names))]
 
     for combination in param_nums:
-        # 'ctr_all' is the first method and 'fg' is the third method
-        ctr_all.append(combination[reference_location]/combination[0])
-        ctr_m.append(combination[reference_location]/combination[1])
-        fg.append(combination[reference_location]/combination[2])
-        wt.append(combination[reference_location]/combination[3])
-        im.append(combination[reference_location]/combination[4])
-        ml.append(combination[reference_location]/combination[5])
+        methods[0].append(combination[0]/combination[reference_location])
+        methods[1].append(combination[1]/combination[reference_location])
+        methods[2].append(combination[2]/combination[reference_location])
+        methods[3].append(combination[3]/combination[reference_location])
+        methods[4].append(combination[4]/combination[reference_location])
+        methods[5].append(combination[5]/combination[reference_location])
 
     tb_dict = dict()
     for m in range(len(methods)):
         tb_dict[names[m]] = np.mean(methods[m])
 
+    # tb_dict looks something like:
+    # {'ctr_all': 0.021869912051460418,
+    # 'ctr_m': 0.52751028000383549,
+    # 'fg': 1.0,
+    # 'im': 0.71620368516520383,
+    # 'ml': 0.86533500528478879,
+    # 'wt': 0.67474526297791027}
+
     # save dictionary as dataframe and output as csv
     pd.DataFrame(tb_dict.items(),
-                 columns=['Method', 'Ratio']).to_csv('tb_dict.csv')
+                 columns=['Method', 'Ratio']).to_csv('./results/tb_dict.csv')
 
     # plots bar graph of ratio of TP/FP of each method to chosen reference
     # method
@@ -260,5 +248,3 @@ def times_better(sweep_object, reference_method):
     plt.ylabel('Ratio of TP/FP to reference method')
     plt.xlabel('Method')
     plt.show()
-
-    print tb_dict
