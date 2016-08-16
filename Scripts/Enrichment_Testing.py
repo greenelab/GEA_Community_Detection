@@ -195,7 +195,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
             results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
 
             top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
-                           results[0][i][1]])
+                                    results[0][i][1]])
 
             non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
 
@@ -212,7 +212,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 
             # signif paths in the top m paths
             top_signif_paths = set([top_m_paths[i][0] for i in range(len(relevant_results))
-                                if top_m_paths[i][1]])
+                                    if top_m_paths[i][1]])
 
             # paths that are not in the top m and signif
             non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
@@ -256,7 +256,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
         false_neg_nums.append(float(len(false_neg)))
         true_neg_nums.append(float(len(true_neg)))
 
-    power = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
+    true_pos_rate = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
     false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
 
 #    return ['Power: {0}'.format(round(power, 3)),
@@ -265,7 +265,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 #            'Total false positive: {0}'.format(sum(false_pos_nums)),
 #            'TP/FP: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
 
-    return [round(power, 3),
+    return [round(true_pos_rate, 3),
             round(false_pos_rate, 5),
             sum(true_pos_nums),
             sum(false_pos_nums),
