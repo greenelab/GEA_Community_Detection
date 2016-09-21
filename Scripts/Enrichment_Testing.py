@@ -145,7 +145,7 @@ def write_gene_list(gene_list, text_fh):
 # ---------------------------------------------------------------------------
 
 def gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                     exp_type='control_all', com_method=None, weights=None,
+                     exp_type='ctr_all', com_method=None, weights=None,
                      min_com_size=None, alpha=.05):
     '''
     Description
@@ -175,14 +175,26 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     success here is defined for if the most signif paths is the seeded path.
 
     '''
-
+    
+#    iterations = 100
+#    num_paths = 3
+#    percent_path = 1
+#    percent_addit = 0
+#    exp_type = 'ctr_m'
+#    com_method = None
+#    weights = None
+#    min_com_size = None
+#    alpha = .05 
+#    
+    
+    
     random.seed(123)
 
-    true_pos_nums = []
-    false_pos_nums = []
-    false_neg_nums = []
-    true_neg_nums = []
-
+    tp_n = np.zeros([iterations, 1])
+    fp_n = np.zeros([iterations, 1])
+    fn_n = np.zeros([iterations, 1])
+    tn_n = np.zeros([iterations, 1])
+    
     for iteration in range(iterations):
         # Randomly select a gene list
         gl_object = m_gene_list(num_paths, percent_path, percent_addit)
@@ -195,7 +207,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
             results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
 
             top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
-                           results[0][i][1]])
+                                    results[0][i][1]])
 
             non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
 
@@ -212,7 +224,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 
             # signif paths in the top m paths
             top_signif_paths = set([top_m_paths[i][0] for i in range(len(relevant_results))
-                                if top_m_paths[i][1]])
+                                    if top_m_paths[i][1]])
 
             # paths that are not in the top m and signif
             non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
@@ -251,22 +263,14 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
         true_neg = set(range(len(PATH_GENES))).difference(set.union(true_pos,
                                                                     false_pos, false_neg))
 
-        true_pos_nums.append(float(len(true_pos)))
-        false_pos_nums.append(float(len(false_pos)))
-        false_neg_nums.append(float(len(false_neg)))
-        true_neg_nums.append(float(len(true_neg)))
-
-    power = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
-    false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
-
-#    return ['Power: {0}'.format(round(power, 3)),
-#            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
-#            'Total true positive: {0}'.format(sum(true_pos_nums)),
-#            'Total false positive: {0}'.format(sum(false_pos_nums)),
-#            'TP/FP: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
-
-    return [round(power, 3),
-            round(false_pos_rate, 5),
-            sum(true_pos_nums),
-            sum(false_pos_nums),
-            round(sum(true_pos_nums)/sum(false_pos_nums), 3)]
+        iter_num = np.matrix(range(iterations)).transpose()
+        iter_num.resize([iterations, 1], refcheck=False)
+        tp_n[iteration] = float(len(true_pos))
+        fp_n[iteration] = float(len(false_pos))
+        fn_n[iteration] = float(len(false_neg))
+        tn_n[iteration] = float(len(true_neg))
+        
+    data = np.concatenate((iter_num, tp_n, fp_n, fn_n, tn_n), axis=1)
+     
+    return data 
+        
