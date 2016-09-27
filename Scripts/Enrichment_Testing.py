@@ -145,8 +145,8 @@ def write_gene_list(gene_list, text_fh):
 # ---------------------------------------------------------------------------
 
 def gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                     exp_type='ctr_all', com_method=None, weights=None,
-                     min_com_size=None, alpha=.05):
+                     exp_type=None, com_method=None, weights=None,
+                     min_com_size=3, alpha=.05):
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -176,7 +176,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 
     '''
     
-#    iterations = 100
+#    iterations = 5
 #    num_paths = 3
 #    percent_path = 1
 #    percent_addit = 0
@@ -185,8 +185,6 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 #    weights = None
 #    min_com_size = None
 #    alpha = .05 
-#    
-    
     
     random.seed(123)
 
@@ -263,7 +261,6 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
         true_neg = set(range(len(PATH_GENES))).difference(set.union(true_pos,
                                                                     false_pos, false_neg))
 
-<<<<<<< HEAD
         iter_num = np.matrix(range(iterations)).transpose()
         iter_num.resize([iterations, 1], refcheck=False)
         tp_n[iteration] = float(len(true_pos))
@@ -275,24 +272,3 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
      
     return data 
         
-=======
-        true_pos_nums.append(float(len(true_pos)))
-        false_pos_nums.append(float(len(false_pos)))
-        false_neg_nums.append(float(len(false_neg)))
-        true_neg_nums.append(float(len(true_neg)))
-
-    true_pos_rate = float(sum(true_pos_nums))/(sum(true_pos_nums)+sum(false_neg_nums))
-    false_pos_rate = float(sum(false_pos_nums)) / (sum(false_pos_nums)+sum(true_neg_nums))
-
-#    return ['Power: {0}'.format(round(power, 3)),
-#            'False positive rate: {0}.'.format(round(false_pos_rate, 5)),
-#            'Total true positive: {0}'.format(sum(true_pos_nums)),
-#            'Total false positive: {0}'.format(sum(false_pos_nums)),
-#            'TP/FP: {0}'.format(round(sum(true_pos_nums)/sum(false_pos_nums), 3))]
-
-    return [round(true_pos_rate, 3),
-            round(false_pos_rate, 5),
-            sum(true_pos_nums),
-            sum(false_pos_nums),
-            round(sum(true_pos_nums)/sum(false_pos_nums), 3)]
->>>>>>> 018a7d48a7fa43ca24d20664274baf1b569dd656
