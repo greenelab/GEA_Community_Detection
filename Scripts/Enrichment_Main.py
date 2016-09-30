@@ -15,67 +15,64 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-def data_generation(iterations, num_paths_min, num_paths_max, percent_min, 
-              percent_max, addit_min, addit_max, exp_type=None, com_method=None, 
-              weights=None, min_com_size=None, alpha=.05):
-                  
-    iterations = 5
-    num_paths_min = 3
-    num_paths_max = 5
-    percent_min = .3
-    percent_max = 1
-    addit_min = 0
-    addit_max = .7 
-    
-    # initializes empty vector 
-    results = np.zeros([1, 5])
+def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
+                    percent_max, addit_min, addit_max, file_name, exp_type=None, com_method=None,
+                    weights=None, min_com_size=None, alpha=.05):
+    '''
+    Description
+    Calls gsea_performance() over desired number of iterations for each paramter
+    level combination of num_paths, percet, and percent_addit to create data for
+    enrichment simulation
+
+    Arguments
+    :param iterations: number of desired iterations of experiment
+    :param exp_type: must set to False if experimental condition desired
+    :param num_paths: number of paths that should be randomly selected
+    :param percent_path: value [0,1] of proportion of genes in each selected
+    path taken
+    :param percent_addit: value [0,1] of proportion of each pathway of
+    random extra genes from the ontology that should be added
+    :param file_name: desired name of file
+    :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
+    'multilevel', defaults to None if control condition
+    :param weights: Weights can either be IMP weights using WEIGHTS w/o quotes or
+    no weights using "NULL". Note n can't be too small for the community detection
+    methods because insufficent genes to create network. Defaults to None if control.
+    :param min_com_size: minimize number of genes in an acceptable community.
+    Defaults to None if control.
+    :param alpha: desired alpha level, defaults to 0.05
+
+    Output
+    A tab separated file of the data generated
+    '''
+
+    # initializes empty vector
+    results = np.empty((0, 5))
     labels = []
     conditions = []
-    
-    # get control data     
-    ctr_methods = ['ctr_all', 'ctr_m']
-    for ctr_method in ctr_methods: 
-        for num_paths in range(num_paths_min, num_paths_max):
-            for percent_path in np.linspace(percent_min, percent_max, 2):
-                for percent_addit in np.linspace(addit_min, addit_max, 2):
-                    res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                         exp_type=ctr_method, com_method=None, weights=None,
-                         min_com_size=None, alpha=.05)
-                    results = np.concatenate((results, res), axis = 0)
-                    labels.append((num_paths, round(percent_path, 3), round(percent_addit, 3)))
-                    # gets rid of inital zero vector row
-                    conditions.extend([ctr_method]*iterations)
-    
-    results = results[1:, ]
+
+    # loops over methods and creates enrichment data
+    methods = ['ctr_all', 'ctr_m', 'fastgreedy', 'walktrap', 'infomap', 'multilevel']
+    for method in methods:
+        if method in ['ctr_all', 'ctr_m']:
+            exp_type = method
+            com_method = None
+        else:
+            exp_type = 'exp'
+            com_method = method
+            for num_paths in range(num_paths_min, num_paths_max):
+                for percent_path in np.linspace(percent_min, percent_max, 2):
+                    for percent_addit in np.linspace(addit_min, addit_max, 2):
+                        res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
+                                               exp_type=ctr_method, com_method=None, weights=None,
+                                               min_com_size=None, alpha=.05)
+                        results = np.concatenate((results, res), axis=0)
+                        labels.append((num_paths, round(percent_path, 3), round(percent_addit, 3)))
+                        conditions.extend([method]*iterations)
+
     full_labels = np.matrix([label for label in labels for i in range(iterations)])
-    ctr_data = np.concatenate((full_labels, np.matrix(conditions).transpose(), results), axis = 1) 
-    
-    # initializes empty vector 
-    results = np.zeros([1, 5])
-    labels = []
-    conditions = []
-    
-    # get experimental data 
-    com_methods = ['fastgreedy', 'walktrap', 'infomap', 'multilevel']
-    for com_method in com_methods: 
-        for num_paths in range(num_paths_min, num_paths_max):
-            for percent_path in np.linspace(percent_min, percent_max, 2):
-                for percent_addit in np.linspace(addit_min, addit_max, 2):
-                    res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                         exp_type='exp', com_method=com_method, weights=None,
-                         min_com_size=3, alpha=.05)
-                    results = np.concatenate((results, res), axis = 0)
-                    labels.append((num_paths, round(percent_path, 3), round(percent_addit, 3)))
-                    conditions.extend([com_method]*iterations)
-                    
-        # gets rid of inital zero vector row
-    results = results[1:, ]
-    full_labels = np.matrix([label for label in labels for i in range(iterations)])
-    exp_data = np.concatenate((full_labels, np.matrix(conditions).transpose(), results), axis = 1) 
-    
-    full_data = np.concatenate((ctr_data, exp_data), axis = 0)
-    
+    data = np.concatenate((full_labels, np.matrix(conditions).transpose(), results), axis=1)
+
     pd.DataFrame(full_data,
-                 columns=['# Path', '% Path', '% Addit', 'Exp_type', 'Iter_num', 'TP', 
-                 'FP', 'FN', 'TN']).to_csv('./results/full_data.csv')
-          
+                 columns=['# Path', '% Path', '% Addit', 'Exp_type', 'Iter_num', 'TP',
+                          'FP', 'FN', 'TN']).to_csv('./results/{0}.csv'.format(file_name), sep='\t')
