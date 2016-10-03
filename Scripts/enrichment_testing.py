@@ -175,24 +175,12 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     success here is defined for if the most signif paths is the seeded path.
 
     '''
-    
-#    iterations = 5
-#    num_paths = 3
-#    percent_path = 1
-#    percent_addit = 0
-#    exp_type = 'ctr_m'
-#    com_method = None
-#    weights = None
-#    min_com_size = None
-#    alpha = .05 
-    
-    random.seed(123)
 
     tp_n = np.zeros([iterations, 1])
     fp_n = np.zeros([iterations, 1])
     fn_n = np.zeros([iterations, 1])
     tn_n = np.zeros([iterations, 1])
-    
+
     for iteration in range(iterations):
         # Randomly select a gene list
         gl_object = m_gene_list(num_paths, percent_path, percent_addit)
@@ -262,13 +250,14 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
                                                                     false_pos, false_neg))
 
         iter_num = np.matrix(range(iterations)).transpose()
-        iter_num.resize([iterations, 1], refcheck=False)
         tp_n[iteration] = float(len(true_pos))
         fp_n[iteration] = float(len(false_pos))
         fn_n[iteration] = float(len(false_neg))
         tn_n[iteration] = float(len(true_neg))
-        
-    data = np.concatenate((iter_num, tp_n, fp_n, fn_n, tn_n), axis=1)
-     
-    return data 
-        
+
+    labels = np.matrix([(num_paths, round(percent_path, 3),
+                         round(percent_addit, 3)) for i in range(iterations)])
+
+    data = np.concatenate((iter_num, np.matrix(labels), tp_n, fp_n, fn_n, tn_n), axis=1)
+
+    return data

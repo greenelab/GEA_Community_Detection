@@ -47,7 +47,7 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     '''
 
     # initializes empty vector
-    results = np.empty((0, 5))
+    results = np.empty((0, 8))
     labels = []
     conditions = []
 
@@ -60,19 +60,17 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
         else:
             exp_type = 'exp'
             com_method = method
-            for num_paths in range(num_paths_min, num_paths_max):
-                for percent_path in np.linspace(percent_min, percent_max, 2):
-                    for percent_addit in np.linspace(addit_min, addit_max, 2):
-                        res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                                               exp_type=ctr_method, com_method=None, weights=None,
-                                               min_com_size=None, alpha=.05)
-                        results = np.concatenate((results, res), axis=0)
-                        labels.append((num_paths, round(percent_path, 3), round(percent_addit, 3)))
-                        conditions.extend([method]*iterations)
+        for num_paths in range(num_paths_min, num_paths_max):
+            for percent_path in np.linspace(percent_min, percent_max, 2):
+                for percent_addit in np.linspace(addit_min, addit_max, 2):
+                    res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
+                                           exp_type=exp_type, com_method=com_method, weights=None,
+                                           min_com_size=None, alpha=.05)
+                    results = np.concatenate((results, res), axis=0)
+                    conditions.extend([method]*iterations)
 
-    full_labels = np.matrix([label for label in labels for i in range(iterations)])
-    data = np.concatenate((full_labels, np.matrix(conditions).transpose(), results), axis=1)
+    data = np.concatenate((np.matrix(conditions).transpose(), results), axis=1)
 
-    pd.DataFrame(full_data,
-                 columns=['# Path', '% Path', '% Addit', 'Exp_type', 'Iter_num', 'TP',
+    pd.DataFrame(data,
+                 columns=['Exp_type', 'Iter_num', '# Path', '% Path', '% Addit', 'TP',
                           'FP', 'FN', 'TN']).to_csv('./results/{0}.csv'.format(file_name), sep='\t')
