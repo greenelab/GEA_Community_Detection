@@ -20,6 +20,7 @@ execfile('community_detection.py')  # community detection functions used in the
 import random
 import operator
 from scipy.stats import hypergeom
+import numpy as np
 
 def enrichment(gene_list, ontology, alpha, all_genes):
     '''
@@ -145,7 +146,7 @@ def write_gene_list(gene_list, text_fh):
 # ---------------------------------------------------------------------------
 
 def gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                     exp_type=None, com_method=None, weights=None,
+                     method=None, com_method=None, weights=None,
                      min_com_size=3, alpha=.05):
     '''
     Description
@@ -154,8 +155,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 
     Arguments
     :param iterations: number of desired iterations of experiment
-    :param control: True/False and indicates if control or experimental condition
-    :must set to False if experimental condition desired
+    :param method: ctr_m, ctr_all, exp
     :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
     'multilevel', defaults to None if control condition
     :param num_paths: number of paths that should be randomly selected
@@ -175,61 +175,20 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     success here is defined for if the most signif paths is the seeded path.
 
     '''
-    
-#    iterations = 5
-#    num_paths = 3
-#    percent_path = 1
-#    percent_addit = 0
-#    exp_type = 'ctr_m'
-#    com_method = None
-#    weights = None
-#    min_com_size = None
-#    alpha = .05 
-    
-    random.seed(123)
 
-    tp_n = np.zeros([iterations, 1])
-    fp_n = np.zeros([iterations, 1])
-    fn_n = np.zeros([iterations, 1])
-    tn_n = np.zeros([iterations, 1])
-    
+    results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
+                       'true_positive', 'false_positive', 'true_negative',
+                       'false_negative']
+
+    summary_results_df = pd.DataFrame(columns=results_columns, index=range(iterations))
+
     for iteration in range(iterations):
-        # Randomly select a gene list
-        gl_object = m_gene_list(num_paths, percent_path, percent_addit)
-        selected_path_ids = gl_object[0]
+
+        selected_path_ids, gene_list = m_gene_list(num_paths, percent_path, percent_addit)
         set_selected_pathids = set(selected_path_ids)
-        gene_list = gl_object[1]
 
-        if exp_type == 'ctr_all': # get all signif paths
-            # results returns [sig_tup, signif (T/F), pvals, # signif]
-            results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
-
-            top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
-                                    results[0][i][1]])
-
-            non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
-
-
-        elif exp_type == 'ctr_m':  # get signif paths in top m
-
-            results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
-
-            # the top m significant paths
-            relevant_results = results[0][0:num_paths]
-
-            # list of top m paths
-            top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
-
-            # signif paths in the top m paths
-            top_signif_paths = set([top_m_paths[i][0] for i in range(len(relevant_results))
-                                    if top_m_paths[i][1]])
-
-            # paths that are not in the top m and signif
-            non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
-
-        elif exp_type == 'exp':
-            # find communities of genes
-            cd_genes = community_detection(gene_list, com_method, weights)
+        if method == 'exp':
+            cd_genes = community_detection(gene_list, com_method, weights=None)
             cd_genes_lst = index_to_edge_name(cd_genes)
 
             cd_com_lst = []
@@ -237,20 +196,47 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
             # keep communities with at min community size
                 if len(com) >= min_com_size:
                     cd_com_lst.append(com)
+        else:
+            cd_com_lst = [gene_list]
+
+        for com in cd_com_lst:
+            results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
 
             top_signif_paths = set()
+            non_top_paths = set()
             nonsig_paths = set()
-            for com in cd_com_lst:  # for each community, do enrichment
-                results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
+            if method == 'exp':
                 top_path = results[0][0][0] # integar id of top path
 
                 if results[0][0][1]:  # is the top path significant? (T/F)
                     top_signif_paths.add(top_path)
 
                 ns_paths = set.difference(set(range(len(PATH_GENES))), set([top_path]))
+
+
                 nonsig_paths = nonsig_paths.union(ns_paths)
 
-            non_top_paths = nonsig_paths.difference(top_signif_paths)
+                non_top_paths = nonsig_paths.difference(top_signif_paths)
+
+            elif method == 'ctr_m':
+                 # the top m significant paths
+                relevant_results = results[0][0:num_paths]
+                # list of top m paths
+                top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
+
+                # signif paths in the top m paths
+                top_signif_paths = set([top_m_paths[i][0] for i in range(len(relevant_results))
+                                        if top_m_paths[i][1]])
+
+                # paths that are not in the top m and signif
+                non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
+
+
+            elif method == 'ctr_all':
+                top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
+                                        results[0][i][1]])
+
+                non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
 
         true_pos = set_selected_pathids.intersection(top_signif_paths)
 
@@ -262,13 +248,24 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
                                                                     false_pos, false_neg))
 
         iter_num = np.matrix(range(iterations)).transpose()
-        iter_num.resize([iterations, 1], refcheck=False)
-        tp_n[iteration] = float(len(true_pos))
-        fp_n[iteration] = float(len(false_pos))
-        fn_n[iteration] = float(len(false_neg))
-        tn_n[iteration] = float(len(true_neg))
-        
-    data = np.concatenate((iter_num, tp_n, fp_n, fn_n, tn_n), axis=1)
-     
-    return data 
-        
+
+        summary_results_df.true_positive[iteration] = float(len(true_pos))
+        summary_results_df.false_positive[iteration] = float(len(false_pos))
+        summary_results_df.false_negative[iteration] = float(len(false_neg))
+        summary_results_df.true_negative[iteration] = float(len(true_neg))
+
+    all_num_paths = [num_paths for i in range(iterations)]
+    all_percent_path = [round(percent_path, 3) for i in range(iterations)]
+    all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
+
+    if method in ['ctr_all', 'ctr_m']:
+        summary_results_df.method = method
+    else:
+        summary_results_df.method = com_method
+
+    summary_results_df.num_paths = all_num_paths
+    summary_results_df.percent_path = all_percent_path
+    summary_results_df.percent_addit = all_percent_addit
+    summary_results_df.iter_num = iter_num
+
+    return summary_results_df

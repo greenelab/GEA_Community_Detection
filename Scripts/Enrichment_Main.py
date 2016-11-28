@@ -3,6 +3,14 @@
 Created on Sun Sep 18 22:39:51 2016
 
 @author: LiaHarrington
+
+Usage:
+Imports functions and constructs from ontology_prep, community_detection
+and enrichment_testing
+
+Description:
+Creates simulation data over the two controls and four experiemntal conditions
+over the various # paths, % path, and % addit gene combinations as a tsv file
 """
 
 execfile('ontology_prep.py')
@@ -16,7 +24,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
-                    percent_max, addit_min, addit_max, file_name, exp_type=None, com_method=None,
+                    percent_max, addit_min, addit_max, file_name,
                     weights=None, min_com_size=None, alpha=.05):
     '''
     Description
@@ -26,7 +34,6 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
 
     Arguments
     :param iterations: number of desired iterations of experiment
-    :param exp_type: must set to False if experimental condition desired
     :param num_paths: number of paths that should be randomly selected
     :param percent_path: value [0,1] of proportion of genes in each selected
     path taken
@@ -44,35 +51,33 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
 
     Output
     A tab separated file of the data generated
+
     '''
 
     # initializes empty vector
-    results = np.empty((0, 5))
-    labels = []
-    conditions = []
+    results = np.empty((0, 9))
 
     # loops over methods and creates enrichment data
-    methods = ['ctr_all', 'ctr_m', 'fastgreedy', 'walktrap', 'infomap', 'multilevel']
     for method in methods:
         if method in ['ctr_all', 'ctr_m']:
-            exp_type = method
+            method = method
             com_method = None
         else:
-            exp_type = 'exp'
             com_method = method
-            for num_paths in range(num_paths_min, num_paths_max):
-                for percent_path in np.linspace(percent_min, percent_max, 2):
-                    for percent_addit in np.linspace(addit_min, addit_max, 2):
-                        res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                                               exp_type=ctr_method, com_method=None, weights=None,
-                                               min_com_size=None, alpha=.05)
-                        results = np.concatenate((results, res), axis=0)
-                        labels.append((num_paths, round(percent_path, 3), round(percent_addit, 3)))
-                        conditions.extend([method]*iterations)
+            method = 'exp'
 
-    full_labels = np.matrix([label for label in labels for i in range(iterations)])
-    data = np.concatenate((full_labels, np.matrix(conditions).transpose(), results), axis=1)
+        for num_paths in range(num_paths_min, num_paths_max):
+            for percent_path in np.linspace(percent_min, percent_max, 2):
+                for percent_addit in np.linspace(addit_min, addit_max, 2):
+                    res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
+                                           method=method, com_method=com_method, weights=None,
+                                           min_com_size=None, alpha=.05)
+                    results = np.concatenate((results, res), axis=0)
 
-    pd.DataFrame(full_data,
-                 columns=['# Path', '% Path', '% Addit', 'Exp_type', 'Iter_num', 'TP',
-                          'FP', 'FN', 'TN']).to_csv('./results/{0}.csv'.format(file_name), sep='\t')
+    results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
+                       'true_positive', 'false_positive', 'true_negative',
+                       'false_negative']
+
+    results_df = pd.DataFrame(results, columns=results_columns)
+
+    results_df.to_csv(file_name, index=False, sep='\t')
