@@ -55,7 +55,13 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     '''
 
     # initializes empty vector
+<<<<<<< HEAD
     results = np.empty((0, 9))
+=======
+    results = np.empty((0, 8))
+    labels = []
+    conditions = []
+>>>>>>> ee27407f61e14f6270aa12c63e7b74a06367d928
 
     # loops over methods and creates enrichment data
     for method in methods:
@@ -64,12 +70,16 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
             com_method = None
         else:
             com_method = method
+<<<<<<< HEAD
             method = 'exp'
 
+=======
+>>>>>>> ee27407f61e14f6270aa12c63e7b74a06367d928
         for num_paths in range(num_paths_min, num_paths_max):
             for percent_path in np.linspace(percent_min, percent_max, 2):
                 for percent_addit in np.linspace(addit_min, addit_max, 2):
                     res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
+<<<<<<< HEAD
                                            method=method, com_method=com_method, weights=None,
                                            min_com_size=None, alpha=.05)
                     results = np.concatenate((results, res), axis=0)
@@ -81,3 +91,15 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     results_df = pd.DataFrame(results, columns=results_columns)
 
     results_df.to_csv(file_name, index=False, sep='\t')
+=======
+                                           exp_type=exp_type, com_method=com_method, weights=None,
+                                           min_com_size=None, alpha=.05)
+                    results = np.concatenate((results, res), axis=0)
+                    conditions.extend([method]*iterations)
+
+    data = np.concatenate((np.matrix(conditions).transpose(), results), axis=1)
+
+    pd.DataFrame(data,
+                 columns=['Exp_type', 'Iter_num', '# Path', '% Path', '% Addit', 'TP',
+                          'FP', 'FN', 'TN']).to_csv('./results/{0}.csv'.format(file_name), sep='\t')
+>>>>>>> ee27407f61e14f6270aa12c63e7b74a06367d928

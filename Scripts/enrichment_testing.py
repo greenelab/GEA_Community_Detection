@@ -175,6 +175,31 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     success here is defined for if the most signif paths is the seeded path.
 
     '''
+<<<<<<< HEAD:Scripts/Enrichment_Testing.py
+=======
+
+    tp_n = np.zeros([iterations, 1])
+    fp_n = np.zeros([iterations, 1])
+    fn_n = np.zeros([iterations, 1])
+    tn_n = np.zeros([iterations, 1])
+
+    for iteration in range(iterations):
+        # Randomly select a gene list
+        gl_object = m_gene_list(num_paths, percent_path, percent_addit)
+        selected_path_ids = gl_object[0]
+        set_selected_pathids = set(selected_path_ids)
+        gene_list = gl_object[1]
+
+        if exp_type == 'ctr_all': # get all signif paths
+            # results returns [sig_tup, signif (T/F), pvals, # signif]
+            results = enrichment(gene_list, PATH_GENES, alpha, ALL_GENES)
+
+            top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
+                                    results[0][i][1]])
+
+            non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
+
+>>>>>>> ee27407f61e14f6270aa12c63e7b74a06367d928:Scripts/enrichment_testing.py
 
     results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
                        'true_positive', 'false_positive', 'true_negative',
@@ -248,6 +273,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
                                                                     false_pos, false_neg))
 
         iter_num = np.matrix(range(iterations)).transpose()
+<<<<<<< HEAD:Scripts/Enrichment_Testing.py
 
         summary_results_df.true_positive[iteration] = float(len(true_pos))
         summary_results_df.false_positive[iteration] = float(len(false_pos))
@@ -269,3 +295,16 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     summary_results_df.iter_num = iter_num
 
     return summary_results_df
+=======
+        tp_n[iteration] = float(len(true_pos))
+        fp_n[iteration] = float(len(false_pos))
+        fn_n[iteration] = float(len(false_neg))
+        tn_n[iteration] = float(len(true_neg))
+
+    labels = np.matrix([(num_paths, round(percent_path, 3),
+                         round(percent_addit, 3)) for i in range(iterations)])
+
+    data = np.concatenate((iter_num, np.matrix(labels), tp_n, fp_n, fn_n, tn_n), axis=1)
+
+    return data
+>>>>>>> ee27407f61e14f6270aa12c63e7b74a06367d928:Scripts/enrichment_testing.py
