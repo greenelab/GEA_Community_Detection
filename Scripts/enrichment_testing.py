@@ -14,13 +14,12 @@ Description:
 """
 
 execfile('ontology_prep.py')  #  creates ALL_GENES and PATH_GENES
-execfile('community_detection.py')  # community detection functions used in the
-                                    # experimental arm
 
 import random
 import operator
 from scipy.stats import hypergeom
 import numpy as np
+from community_detection import community_detection, index_to_edge_name
 
 def enrichment(gene_list, ontology, alpha, all_genes):
     '''
@@ -122,32 +121,10 @@ def write_gene_list(gene_list, text_fh):
         for gene in gene_list:
             text_file.write(str(gene)+'\n')
 
-# ---------------------------------------------------------------------------
-#                       GOAL: MOST SIGNIFICANT PATHWAY
-# ---------------------------------------------------------------------------
-#                               Control Arm
-# Performs N experiments drawing m pathways using n% of the genes in each pathway
-# with an additional a% random genes from ontology and returns the
-# power, false positive rate, total true positive, total false positive, and
-# TP to FP ratio. The output will look something like this:
 
-#['Power: 0.683',
-# 'False positive rate: 0.00109.',
-# 'Total true positive: 41.0',
-# 'Total false positive: 4.0',
-# 'TP to FP ratio: 10.25']
-
-
-#For the control arm, no community detection is performed and one can simply
-# fill in the first four paramters as the other paramters concerining
-# the experimental arm default to None. When performing the experimental arm,
-# be sure to compelte all default paramters except alpha, unless a different
-# level is desired.
-# ---------------------------------------------------------------------------
-
-def gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                     method=None, com_method=None, weights=None,
-                     min_com_size=3, alpha=.05):
+def gea_performance(iterations, num_paths, percent_path, percent_addit,
+                    method=None, com_method=None, weights=None,
+                    min_com_size=3, alpha=.05):
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -155,7 +132,7 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
 
     Arguments
     :param iterations: number of desired iterations of experiment
-    :param method: ctr_m, ctr_all, exp
+    :param method: 'ctr_m', 'ctr_all', 'exp'
     :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
     'multilevel', defaults to None if control condition
     :param num_paths: number of paths that should be randomly selected
@@ -171,8 +148,9 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     :param alpha: desired alpha level, defaults to 0.05
 
     Output
-    :Returns the average power and false positives. Power and
-    success here is defined for if the most signif paths is the seeded path.
+    :Returns true positive, false posotive, true negative, and false negative
+    for each parameter level combination for desired experiment type and
+    community detection method
 
     '''
 
@@ -259,13 +237,13 @@ def gsea_performance(iterations, num_paths, percent_path, percent_addit,
     all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
 
     if method in ['ctr_all', 'ctr_m']:
-        summary_results_df.method = method
+        summary_results_df = summary_results_df.assign(method = method)
     else:
-        summary_results_df.method = com_method
+        summary_results_df = summary_results_df.assign(method = com_method)
 
-    summary_results_df.num_paths = all_num_paths
-    summary_results_df.percent_path = all_percent_path
-    summary_results_df.percent_addit = all_percent_addit
-    summary_results_df.iter_num = iter_num
+    summary_results_df = summary_results_df.assign(num_paths = all_num_paths)
+    summary_results_df = summary_results_df.assign(percent_path = all_percent_path)
+    summary_results_df = summary_results_df.assign(percent_addit = all_percent_addit)
+    summary_results_df = summary_results_df.assign(iter_num = iter_num) 
 
     return summary_results_df
