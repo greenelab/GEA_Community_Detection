@@ -13,15 +13,12 @@ Creates simulation data over the two controls and four experiemntal conditions
 over the various # paths, % path, and % addit gene combinations as a tsv file
 """
 
-execfile('ontology_prep.py')
-execfile('community_detection.py')
-execfile('enrichment_testing.py')
-
 # Note: Control_most_signif and Experimental_most_signif from Enrichment_Testing
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from enrichment_testing import gea_performance
 
 def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
                     percent_max, addit_min, addit_max, file_name,
@@ -29,7 +26,7 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     '''
     Description
     Calls gsea_performance() over desired number of iterations for each paramter
-    level combination of num_paths, percet, and percent_addit to create data for
+    level combination of num_paths, percent, and percent_addit to create data for
     enrichment simulation
 
     Arguments
@@ -40,8 +37,6 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     :param percent_addit: value [0,1] of proportion of each pathway of
     random extra genes from the ontology that should be added
     :param file_name: desired name of file
-    :param com_method: can be 'fastgreedy', 'walktrap', 'infomap,' or
-    'multilevel', defaults to None if control condition
     :param weights: Weights can either be IMP weights using WEIGHTS w/o quotes or
     no weights using "NULL". Note n can't be too small for the community detection
     methods because insufficent genes to create network. Defaults to None if control.
@@ -58,6 +53,7 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     results = np.empty((0, 9))
 
     # loops over methods and creates enrichment data
+    methods = ['ctr_all', 'ctr_m', 'fastgreedy', 'walktrap', 'infomap', 'multilevel']
     for method in methods:
         if method in ['ctr_all', 'ctr_m']:
             method = method
@@ -67,11 +63,11 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
             method = 'exp'
 
         for num_paths in range(num_paths_min, num_paths_max):
-            for percent_path in np.linspace(percent_min, percent_max, 2):
-                for percent_addit in np.linspace(addit_min, addit_max, 2):
-                    res = gsea_performance(iterations, num_paths, percent_path, percent_addit,
-                                           method=method, com_method=com_method, weights=None,
-                                           min_com_size=None, alpha=.05)
+            for percent_path in np.linspace(percent_min, percent_max, 5):
+                for percent_addit in np.linspace(addit_min, addit_max, 5):
+                    res = gea_performance(iterations, num_paths, percent_path, percent_addit,
+                                          method=method, com_method=com_method, weights=None,
+                                          min_com_size=None, alpha=.05)
                     results = np.concatenate((results, res), axis=0)
 
     results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
