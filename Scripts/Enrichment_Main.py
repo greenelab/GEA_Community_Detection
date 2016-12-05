@@ -18,6 +18,7 @@ over the various # paths, % path, and % addit gene combinations as a tsv file
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from enrichment_testing import gea_performance
 
 def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
