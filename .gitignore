@@ -1,3 +1,4 @@
 # Ignore all instances of DS_Store
 
 .DS_Store
+*.DS_Store
