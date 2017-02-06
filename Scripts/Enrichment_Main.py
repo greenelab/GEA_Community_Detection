@@ -15,9 +15,7 @@ over the various # paths, % path, and % addit gene combinations as a tsv file
 
 # Note: Control_most_signif and Experimental_most_signif from Enrichment_Testing
 
-import os
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from enrichment_testing import gea_performance
 
@@ -57,17 +55,19 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     methods = ['ctr_all', 'ctr_m', 'fastgreedy', 'walktrap', 'infomap', 'multilevel']
     for method in methods:
         if method in ['ctr_all', 'ctr_m']:
-            method = method
+            ctr_method = method
+            exp_type = 'ctr'
             com_method = None
         else:
             com_method = method
-            method = 'exp'
+            exp_type = 'exp' 
+            ctr_method = None
 
         for num_paths in range(num_paths_min, num_paths_max):
             for percent_path in np.linspace(percent_min, percent_max, 5):
                 for percent_addit in np.linspace(addit_min, addit_max, 5):
-                    res = gea_performance(iterations, num_paths, percent_path, percent_addit,
-                                          method=method, com_method=com_method, weights=None,
+                    res = gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
+                                          ctr_method=method, com_method=com_method, weights=None,
                                           min_com_size=None, alpha=.05)
                     results = np.concatenate((results, res), axis=0)
 
