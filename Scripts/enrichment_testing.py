@@ -122,9 +122,9 @@ def write_gene_list(gene_list, text_fh):
             text_file.write(str(gene)+'\n')
 
 
-def gea_performance(iterations, num_paths, percent_path, percent_addit,
-                    method=None, com_method=None, weights=None,
-                    min_com_size=3, alpha=.05):
+def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
+                    ctr_method=None, com_method=None, weights=None,
+                    min_com_size=None, alpha=.05):
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -165,7 +165,7 @@ def gea_performance(iterations, num_paths, percent_path, percent_addit,
         selected_path_ids, gene_list = m_gene_list(num_paths, percent_path, percent_addit)
         set_selected_pathids = set(selected_path_ids)
 
-        if method == 'exp':
+        if exp_type == 'exp':
             cd_genes = community_detection(gene_list, com_method, weights=None)
             cd_genes_lst = index_to_edge_name(cd_genes)
 
@@ -177,13 +177,38 @@ def gea_performance(iterations, num_paths, percent_path, percent_addit,
         else:
             cd_com_lst = [gene_list]
 
-        for com in cd_com_lst:
-            results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
-
+        if exp_type == 'ctr': 
             top_signif_paths = set()
-            non_top_paths = set()
             nonsig_paths = set()
-            if method == 'exp':
+            for com in cd_com_lst:
+                results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
+            
+    
+                if ctr_method == 'ctr_m':
+                     # the top m significant paths
+                    relevant_results = results[0][0:num_paths]
+                    # list of top m paths
+                    top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
+    
+                    # signif paths in the top m paths
+                    top_signif_paths = set([top_m_paths[i][0] for i in range(len(relevant_results))
+                                            if top_m_paths[i][1]])
+    
+                    # paths that are not in the top m and signif
+                    non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
+    
+    
+                elif ctr_method == 'ctr_all':
+                    top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
+                                            results[0][i][1]])
+    
+                    non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
+        
+        elif exp_type == 'exp':  
+            top_signif_paths = set()
+            nonsig_paths = set()
+            for com in cd_com_lst:
+                results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
                 top_path = results[0][0][0] # integar id of top path
 
                 if results[0][0][1]:  # is the top path significant? (T/F)
@@ -191,56 +216,35 @@ def gea_performance(iterations, num_paths, percent_path, percent_addit,
 
                 ns_paths = set.difference(set(range(len(PATH_GENES))), set([top_path]))
 
-
                 nonsig_paths = nonsig_paths.union(ns_paths)
-
-                non_top_paths = nonsig_paths.difference(top_signif_paths)
-
-            elif method == 'ctr_m':
-                 # the top m significant paths
-                relevant_results = results[0][0:num_paths]
-                # list of top m paths
-                top_m_paths = [relevant_results[i] for i in range(len(relevant_results))]
-
-                # signif paths in the top m paths
-                top_signif_paths = set([top_m_paths[i][0] for i in range(len(relevant_results))
-                                        if top_m_paths[i][1]])
-
-                # paths that are not in the top m and signif
-                non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
-
-
-            elif method == 'ctr_all':
-                top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
-                                        results[0][i][1]])
-
-                non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
+            
+            non_top_paths = nonsig_paths.difference(top_signif_paths)
 
         true_pos = set_selected_pathids.intersection(top_signif_paths)
-
+    
         false_pos = top_signif_paths.difference(set_selected_pathids)
-
+    
         false_neg = non_top_paths.intersection(set_selected_pathids)
-
+    
         true_neg = set(range(len(PATH_GENES))).difference(set.union(true_pos,
                                                                     false_pos, false_neg))
 
         iter_num = np.matrix(range(iterations)).transpose()
-
+    
         summary_results_df.true_positive[iteration] = float(len(true_pos))
         summary_results_df.false_positive[iteration] = float(len(false_pos))
         summary_results_df.false_negative[iteration] = float(len(false_neg))
         summary_results_df.true_negative[iteration] = float(len(true_neg))
-
-    all_num_paths = [num_paths for i in range(iterations)]
-    all_percent_path = [round(percent_path, 3) for i in range(iterations)]
-    all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
-
-    if method in ['ctr_all', 'ctr_m']:
-        summary_results_df = summary_results_df.assign(method = method)
-    else:
-        summary_results_df = summary_results_df.assign(method = com_method)
-
+    
+        all_num_paths = [num_paths for i in range(iterations)]
+        all_percent_path = [round(percent_path, 3) for i in range(iterations)]
+        all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
+    
+        if ctr_method in ['ctr_all', 'ctr_m']:
+            summary_results_df = summary_results_df.assign(method = ctr_method)
+        else:
+            summary_results_df = summary_results_df.assign(method = com_method)
+    
     summary_results_df = summary_results_df.assign(num_paths = all_num_paths)
     summary_results_df = summary_results_df.assign(percent_path = all_percent_path)
     summary_results_df = summary_results_df.assign(percent_addit = all_percent_addit)
