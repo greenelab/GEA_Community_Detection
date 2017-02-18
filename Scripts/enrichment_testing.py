@@ -123,8 +123,13 @@ def write_gene_list(gene_list, text_fh):
 
 
 def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
+<<<<<<< HEAD
                     ctr_method=None, com_method=None, weights=None,
                     min_com_size=None, alpha=.05):
+=======
+                    method=None, com_method=None, weights=None,
+                    min_com_size=3, alpha=.05):
+>>>>>>> upstream/master
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -184,7 +189,11 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
                 results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
             
     
+<<<<<<< HEAD
                 if ctr_method == 'ctr_m':
+=======
+                if method == 'ctr_m':
+>>>>>>> upstream/master
                      # the top m significant paths
                     relevant_results = results[0][0:num_paths]
                     # list of top m paths
@@ -198,7 +207,11 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
                     non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
     
     
+<<<<<<< HEAD
                 elif ctr_method == 'ctr_all':
+=======
+                elif method == 'ctr_all':
+>>>>>>> upstream/master
                     top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
                                             results[0][i][1]])
     
@@ -240,8 +253,13 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
         all_percent_path = [round(percent_path, 3) for i in range(iterations)]
         all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
     
+<<<<<<< HEAD
         if ctr_method in ['ctr_all', 'ctr_m']:
             summary_results_df = summary_results_df.assign(method = ctr_method)
+=======
+        if method in ['ctr_all', 'ctr_m']:
+            summary_results_df = summary_results_df.assign(method = method)
+>>>>>>> upstream/master
         else:
             summary_results_df = summary_results_df.assign(method = com_method)
     
