@@ -199,6 +199,7 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
     
     
                 elif ctr_method == 'ctr_all':
+
                     top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
                                             results[0][i][1]])
     
