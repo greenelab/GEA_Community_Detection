@@ -124,12 +124,17 @@ def write_gene_list(gene_list, text_fh):
 
 def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
 <<<<<<< HEAD
+<<<<<<< HEAD
                     ctr_method=None, com_method=None, weights=None,
                     min_com_size=None, alpha=.05):
 =======
                     method=None, com_method=None, weights=None,
                     min_com_size=3, alpha=.05):
 >>>>>>> upstream/master
+=======
+                    ctr_method=None, com_method=None, weights=None,
+                    min_com_size=None, alpha=.05):
+>>>>>>> 08c9e03017df5b794f7f540a831bb11050552a8c
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -190,10 +195,14 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
             
     
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if ctr_method == 'ctr_m':
 =======
                 if method == 'ctr_m':
 >>>>>>> upstream/master
+=======
+                if ctr_method == 'ctr_m':
+>>>>>>> 08c9e03017df5b794f7f540a831bb11050552a8c
                      # the top m significant paths
                     relevant_results = results[0][0:num_paths]
                     # list of top m paths
@@ -208,10 +217,15 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
     
     
 <<<<<<< HEAD
+<<<<<<< HEAD
                 elif ctr_method == 'ctr_all':
 =======
                 elif method == 'ctr_all':
 >>>>>>> upstream/master
+=======
+                elif ctr_method == 'ctr_all':
+
+>>>>>>> 08c9e03017df5b794f7f540a831bb11050552a8c
                     top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
                                             results[0][i][1]])
     
@@ -254,12 +268,17 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
         all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
     
 <<<<<<< HEAD
+<<<<<<< HEAD
         if ctr_method in ['ctr_all', 'ctr_m']:
             summary_results_df = summary_results_df.assign(method = ctr_method)
 =======
         if method in ['ctr_all', 'ctr_m']:
             summary_results_df = summary_results_df.assign(method = method)
 >>>>>>> upstream/master
+=======
+        if ctr_method in ['ctr_all', 'ctr_m']:
+            summary_results_df = summary_results_df.assign(method = ctr_method)
+>>>>>>> 08c9e03017df5b794f7f540a831bb11050552a8c
         else:
             summary_results_df = summary_results_df.assign(method = com_method)
     

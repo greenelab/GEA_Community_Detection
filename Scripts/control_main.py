@@ -2,7 +2,7 @@
 """
 Created on Sun Feb  5 23:12:52 2017
 
-@author: Sunflowers
+@author: Lia Harrington
 """
 
 import numpy as np
@@ -39,6 +39,9 @@ def data_generation_control(iterations, num_paths, percent_path, addit_min, addi
     '''
 
     # initializes empty vector
+    # 9 columns because using output from gea_performance which yeilds
+    # iteration x 9 matrix with the columns being
+    # iter_num, method, num_paths, percent_path, percent_addit, TP, FP, TN, FN
     results = np.empty((0, 9))
 
     # loops over methods and creates enrichment data

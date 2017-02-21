@@ -41,4 +41,5 @@ def control(iterations, gene_nums):
            
     return results_df
 
-control(iterations, gene_nums).to_csv('ctr_all_control', sep = ',')
+control_df = control(iterations, gene_nums)
+control_df.to_csv('ctr_all_control', sep = ',')
