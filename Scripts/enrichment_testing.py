@@ -123,8 +123,8 @@ def write_gene_list(gene_list, text_fh):
 
 
 def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
-                    method=None, com_method=None, weights=None,
-                    min_com_size=3, alpha=.05):
+                    ctr_method=None, com_method=None, weights=None,
+                    min_com_size=None, alpha=.05):
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -153,7 +153,7 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
     community detection method
 
     '''
-
+    
     results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
                        'true_positive', 'false_positive', 'true_negative',
                        'false_negative']
@@ -161,11 +161,21 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
     summary_results_df = pd.DataFrame(columns=results_columns, index=range(iterations))
 
     for iteration in range(iterations):
+        
+#    exp_type = 'ctr'
+#    num_paths = 1
+#    percent_path = .65
+#    percent_addit = .1
+#    ctr_method = 'ctr_all'
+#    com_method = None
+#    weights = None
+#    min_com_size = None
+#    alpha = .05
 
         selected_path_ids, gene_list = m_gene_list(num_paths, percent_path, percent_addit)
         set_selected_pathids = set(selected_path_ids)
 
-        if method == 'exp':
+        if exp_type == 'exp':
             cd_genes = community_detection(gene_list, com_method, weights=None)
             cd_genes_lst = index_to_edge_name(cd_genes)
 
@@ -184,7 +194,7 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
                 results = enrichment(com, PATH_GENES, alpha, ALL_GENES)
             
     
-                if method == 'ctr_m':
+                if ctr_method == 'ctr_m':
                      # the top m significant paths
                     relevant_results = results[0][0:num_paths]
                     # list of top m paths
@@ -198,7 +208,7 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
                     non_top_paths = set(range(len(PATH_GENES))).difference(top_signif_paths)
     
     
-                elif method == 'ctr_all':
+                elif ctr_method == 'ctr_all':
                     top_signif_paths = set([results[0][i][0] for i in range(len(results[0])) if
                                             results[0][i][1]])
     
@@ -240,8 +250,8 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
         all_percent_path = [round(percent_path, 3) for i in range(iterations)]
         all_percent_addit = [round(percent_addit, 3) for i in range(iterations)]
     
-        if method in ['ctr_all', 'ctr_m']:
-            summary_results_df = summary_results_df.assign(method = method)
+        if ctr_method in ['ctr_all', 'ctr_m']:
+            summary_results_df = summary_results_df.assign(method = ctr_method)
         else:
             summary_results_df = summary_results_df.assign(method = com_method)
     

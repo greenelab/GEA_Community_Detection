@@ -1,26 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Sep 18 22:39:51 2016
+Created on Sun Feb  5 23:12:52 2017
 
-@author: LiaHarrington
-
-Usage:
-Imports functions and constructs from ontology_prep, community_detection
-and enrichment_testing
-
-Description:
-Creates simulation data over the two controls and four experiemntal conditions
-over the various # paths, % path, and % addit gene combinations as a tsv file
+@author: Lia Harrington
 """
-
-# Note: Control_most_signif and Experimental_most_signif from Enrichment_Testing
 
 import numpy as np
 import pandas as pd
 from enrichment_testing import gea_performance
 
-def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
-                    percent_max, addit_min, addit_max, file_name,
+
+def data_generation_control(iterations, num_paths, percent_path, addit_min, addit_max, file_name,
                     weights=None, min_com_size=None, alpha=.05):
     '''
     Description
@@ -49,6 +39,9 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
     '''
 
     # initializes empty vector
+    # 9 columns because using output from gea_performance which yeilds
+    # iteration x 9 matrix with the columns being
+    # iter_num, method, num_paths, percent_path, percent_addit, TP, FP, TN, FN
     results = np.empty((0, 9))
 
     # loops over methods and creates enrichment data
@@ -63,13 +56,11 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
             exp_type = 'exp' 
             ctr_method = None
 
-        for num_paths in range(num_paths_min, num_paths_max):
-            for percent_path in np.linspace(percent_min, percent_max, 5):
-                for percent_addit in np.linspace(addit_min, addit_max, 5):
-                    res = gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
-                                          ctr_method=method, com_method=com_method, weights=None,
-                                          min_com_size=None, alpha=.05)
-                    results = np.concatenate((results, res), axis=0)
+        for percent_addit in np.linspace(addit_min, addit_max, 5):
+                res = gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
+                                      ctr_method=method, com_method=com_method, weights=None,
+                                      min_com_size=None, alpha=.05)
+                results = np.concatenate((results, res), axis=0)
 
     results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
                        'true_positive', 'false_positive', 'true_negative',
