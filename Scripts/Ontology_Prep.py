@@ -22,6 +22,7 @@ PATH_NAMES and PATH_GENES are created global variables.
 
 """
 import pandas as pd
+import pickle 
 
 #Initiate GLOBAL VARIABLES
 
@@ -36,7 +37,8 @@ REACTOME = 'c2.cp.reactome.v5.1.entrez.gmt.txt'
 KEGG = 'c2.cp.kegg.v5.1.entrez.gmt.txt'
 PID = 'PID.Entrez.DB.txt'
 
-FILENAME = KEGG
+FILENAME = PID
+file_ontology_name = 'PID'
 
 try:
     FHAND = open(FILENAME)
@@ -84,3 +86,8 @@ try:
 
 except:
     print 'Invalid edege-list.'
+
+pickle.dump(PATH_GENES, open('{0}_path_genes.pkl'.format(file_ontology_name), 'w'))
+pickle.dump(ALL_GENES, open('{0}_all_genes.pkl'.format(file_ontology_name), 'w'))
+pickle.dump(PATH_NAMES, open('{0}_path_names.pkl'.format(file_ontology_name), 'w'))
+pickle.dump(IMP_GENES, open('IMP_genes.pkl', 'w'))
