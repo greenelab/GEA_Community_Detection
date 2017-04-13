@@ -1,6 +1,14 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
+Created on Thu Apr 13 00:23:54 2017
+
+@author: LiaHarrington
+"""
+
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
 Created on Sun Mar 26 00:21:52 2017
 
 @author: LiaHarrington
@@ -16,7 +24,11 @@ PATH_GENES = pickle.load(open('PID_path_genes.pkl', 'r'))
 PATH_NAMES = pickle.load(open('PID_path_names.pkl', 'r'))
 IMP_GENES = pickle.load(open('IMP_genes.pkl', 'r'))
 
-hgsc = pd.read_csv('entrezid_hgsc.txt', sep = '\t', index_col=0)
+hgsc = pd.read_csv('entrezid_hgsc.txt', sep = '\t')
+
+hgsc.reset_index(level=0, inplace=True)
+ 
+hgsc.rename(columns={'index': 'Genes'}, inplace=True)
 
 # create genelist for each cluster from hgsc data
 k4c1 = hgsc.Genes[hgsc.K4Cluster1_Pos==1].append(hgsc.Genes[hgsc.K4Cluster1_Neg==1])
@@ -119,6 +131,7 @@ def cd_gea_pathways(all_genes_lst, all_names_lst, com_method, alpha=.05,
     :dataframe with pathway_name, pval, cluster id and community id for each significant
     pathway
     '''
+    
     path_dict = dict.fromkeys(all_names_lst, [])
     
     keys = sorted(path_dict.keys())
@@ -149,11 +162,43 @@ def cd_gea_pathways(all_genes_lst, all_names_lst, com_method, alpha=.05,
             community_melt_df = community_melt_df.assign(cluster = '{0}'.format(keys[i]))
             community_melt_df = community_melt_df.assign(community = c)
             
+            # check non-empty dataframe
+            if len(community_melt_df) > 0: 
+            
+                hgsc_name_dict = {'k2c1': ['K2Cluster1_Pos','K2Cluster1_Neg'],
+                                  'k2c2': ['K2Cluster2_Pos','K2Cluster2_Neg'],
+                                  'k3c1': ['K3Cluster1_Pos','K3Cluster1_Neg'],
+                                  'k3c2': ['K3Cluster2_Pos','K3Cluster2_Neg'],
+                                  'k3c3': ['K3Cluster3_Pos','K3Cluster3_Neg'],
+                                  'k4c1': ['K4Cluster1_Pos','K4Cluster1_Neg'],
+                                  'k4c2': ['K4Cluster2_Pos','K4Cluster2_Neg'],
+                                  'k4c3': ['K4Cluster3_Pos','K4Cluster3_Neg'],
+                                  'k4c4': ['K4Cluster4_Pos','K4Cluster4_Neg']}
+                
+                # must do zero-index to actually just get the cluster string object
+                cluster_pos, cluster_neg = hgsc_name_dict[community_melt_df.cluster[0]]
+                
+                cluster_pos_genes = convert_string(hgsc.Genes[hgsc[cluster_pos]==1])
+                cluster_neg_genes = convert_string(hgsc.Genes[hgsc[cluster_neg]==1])
+                
+                relv_path_id = PATH_NAMES.index(community_melt_df.variable[0])
+                relv_path_genes = PATH_GENES[relv_path_id]
+                count_pos = 0
+                count_neg = 0
+                for gene in relv_path_genes: 
+                    if gene in cluster_pos_genes: 
+                        count_pos += 1
+                    elif gene in cluster_neg_genes: 
+                        count_neg += 1
+               
+                community_melt_df = community_melt_df.assign(num_pos_genes=count_pos)
+                community_melt_df = community_melt_df.assign(num_neg_genes=count_neg)
+            
             cluster_df = cluster_df.append(community_melt_df, ignore_index=True)
+            
+        cluster_df2 = cluster_df.rename(columns = {'variable': 'pathway_name', 'value': 'pval'})
     
-    cluster_df.columns = ['pathway_name', 'pval', 'cluster', 'community' ]
-    
-    return cluster_df
+    return cluster_df2
            
 master_genes_lst = [all_genes_lst_k4, all_genes_lst_k3, all_genes_lst_k2]
 master_namelst = [['k4c1', 'k4c2', 'k4c3', 'k4c4'], ['k3c1', 'k3c2', 'k3c3'], ['k2c1', 'k2c2']]
@@ -172,8 +217,9 @@ def run_all_cd(master_genes_lst, master_namelst):
     methods and k values
     
     '''
+    
     methods = ['fastgreedy', 'walktrap', 'infomap', 'multilevel']
-    cols = ['pathway_name', 'pval', 'cluster', 'community', 'method']
+    cols = ['pathway_name', 'pval', 'cluster', 'community', 'method', 'num_pos_genes', 'num_neg_genes']
     
     master_df = pd.DataFrame(columns=cols)
     
