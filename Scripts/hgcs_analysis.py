@@ -8,17 +8,17 @@ Created on Sun Mar 26 00:21:52 2017
 
 from community_detection import community_detection, index_to_edge_name
 from enrichment_testing import enrichment
+import pickle
+import pandas as pd
 
-ALL_GENES = pickle.load(open('pid_all_genes.pkl', 'r'))
-PATH_GENES = pickle.load(open('pid_path_genes.pkl', 'r'))
-PATH_NAMES = pickle.load(open('pid_path_names.pkl', 'r'))
+ALL_GENES = pickle.load(open('PID_all_genes.pkl', 'r'))
+PATH_GENES = pickle.load(open('PID_path_genes.pkl', 'r'))
+PATH_NAMES = pickle.load(open('PID_path_names.pkl', 'r'))
+IMP_GENES = pickle.load(open('IMP_genes.pkl', 'r'))
 
+hgsc = pd.read_csv('entrezid_hgsc.txt', sep = '\t', index_col=0)
 
-hgsc = pd.read_csv('entrezid_hgsc.txt', sep = '\t')
-hgsc.reset_index(level=0, inplace=True)
-
-hgsc.rename(columns={'index': 'Genes'}, inplace=True)
-
+# create genelist for each cluster from hgsc data
 k4c1 = hgsc.Genes[hgsc.K4Cluster1_Pos==1].append(hgsc.Genes[hgsc.K4Cluster1_Neg==1])
 k4c2 = hgsc.Genes[hgsc.K4Cluster2_Pos==1].append(hgsc.Genes[hgsc.K4Cluster2_Neg==1])
 k4c3 = hgsc.Genes[hgsc.K4Cluster3_Pos==1].append(hgsc.Genes[hgsc.K4Cluster3_Neg==1])
@@ -31,16 +31,30 @@ k3c3 = hgsc.Genes[hgsc.K3Cluster3_Pos==1].append(hgsc.Genes[hgsc.K3Cluster3_Neg=
 k2c1 = hgsc.Genes[hgsc.K2Cluster1_Pos==1].append(hgsc.Genes[hgsc.K2Cluster1_Neg==1])
 k2c2 = hgsc.Genes[hgsc.K2Cluster2_Pos==1].append(hgsc.Genes[hgsc.K2Cluster2_Neg==1])
 
+# create combined genelist over the cluster for each k
 all_genes_lst_k4 = [k4c1, k4c2, k4c3, k4c4]
 all_genes_lst_k3 = [k3c1, k3c2, k3c3]
 all_genes_lst_k2 = [k2c1, k2c2]
 
-
 def not_in(gene_list):
-    '''finds genes either not in IMP or PID ontology'''
+    '''
+    Description
+    Finds genes either not in IMP or PID ontology to help
+    identify which genes are missing from which source
+       
+    Arguments
+    :gene_lst: the gene_lst of interest
+   
+    Output
+    :not_imp: genes in gene_lst not in IMP
+    :not_all: genes in gene_lst not in ontology (ALL_GENES)
+    :both: genes neither in IMP or ontology
+    '''
+    
     not_imp = []
     not_all = []
     both = []
+    
     for gene in gene_list: 
         if gene not in IMP_GENES and gene in ALL_GENES: 
             not_imp.append(gene)
@@ -51,32 +65,60 @@ def not_in(gene_list):
     return not_imp, not_all, both
 
 def convert_string(gene_list): 
-    '''converts the list of integer gene ids to string type'''
+    '''
+    Description
+    converts the list of integer gene ids to string type
+    
+    Arguments
+    :gene_list: the list of genes of interest
+    
+    Output
+    :A list of genes in string form instead of integer. This is for compatibility
+    with PATH_GENES and ALL_GENES
+    '''
+    
     return [str(g) for g in gene_list]
 
 def remove_not_in_IMP(gene_list):
-    '''removes all genes in the gene_list that are not in IMP'''
+    '''
+    Description
+    Removes all genes in the gene_list that are not in IMP
+    
+    Arguments
+    :gene_list: list of genes of interest
+    
+    Output
+    :Returns list of genes that have genes not in IMP removed. This is to 
+    help ensure that the sub_graph from the gene list can be created from IMP
+    network for community detection methods. 
+    
+    '''
     missing = []
     for gene in gene_list: 
         if gene not in IMP_GENES: 
             missing.append(gene)
     return [gene for gene in gene_list if gene not in missing]
 
-all_genes_lst = [k4c1, k4c2, k4c3, k4c4]
-all_names_lst = ['k4c1', 'k4c2', 'k4c3', 'k4c4']
-
-def cd_gea_pathways(all_genes_lst, all_names_lst, com_method, alpha=.05, min_com_size=3, weights=None): 
-    '''loops over all the gene lists using selected community detection method 
-        and returns a dictionary with cluster id as key and the community genes
-        along with identified significant pathways'''
-        
-    #all_genes_lst = all_genes_lst_k3
-    #all_names_lst = ['k3c1', 'k3c2', 'k3c3']
-#    com_method = 'walktrap'
-#    min_com_size = 3
-#    weights = None
-#    alpha = .05
-#    
+def cd_gea_pathways(all_genes_lst, all_names_lst, com_method, alpha=.05, 
+                    min_com_size=3, weights=None): 
+    '''
+    Description
+    Loops over all the gene lists using selected community detection method 
+    and returns a dataframe with significant pathway_name, pvalue, cluster id
+    and community number
+    
+    Arguments
+    :all_gene_lst: list of list of genes in each cluster for specified hgsc k
+    :all_names_lst: list of cluster name, for example ['k2c1', 'k2c2']
+    :com_method: can be 'fastgreedy', 'walktrap', 'infomap', or 'multilevel'
+    :alpha: preset to .05
+    :min_com_size: minimum size of community for it to be considered for further analysis
+    :weights: weights used in IMP network, default is None
+    
+    Output
+    :dataframe with pathway_name, pval, cluster id and community id for each significant
+    pathway
+    '''
     path_dict = dict.fromkeys(all_names_lst, [])
     
     keys = sorted(path_dict.keys())
@@ -102,21 +144,34 @@ def cd_gea_pathways(all_genes_lst, all_names_lst, com_method, alpha=.05, min_com
                 cd_com_dict[PATH_NAMES[results[0][0][0]]] = [results[2][results[0][0][0]]]
                 
          
-            com_df = pd.DataFrame(cd_com_dict)
-            cd_com2 = pd.melt(com_df)
-            cd_com2 = cd_com2.assign(cluster = '{0}'.format(keys[i]))
-            cd_com2 = cd_com2.assign(community = c)
+            community_df = pd.DataFrame(cd_com_dict)
+            community_melt_df = pd.melt(community_df)
+            community_melt_df = community_melt_df.assign(cluster = '{0}'.format(keys[i]))
+            community_melt_df = community_melt_df.assign(community = c)
             
-            cluster_df = cluster_df.append(cd_com2, ignore_index=True)
+            cluster_df = cluster_df.append(community_melt_df, ignore_index=True)
     
     cluster_df.columns = ['pathway_name', 'pval', 'cluster', 'community' ]
     
     return cluster_df
-            
+           
 master_genes_lst = [all_genes_lst_k4, all_genes_lst_k3, all_genes_lst_k2]
 master_namelst = [['k4c1', 'k4c2', 'k4c3', 'k4c4'], ['k3c1', 'k3c2', 'k3c3'], ['k2c1', 'k2c2']]
     
 def run_all_cd(master_genes_lst, master_namelst): 
+    '''
+    Description
+    Creates master dataframe over all community detection methods and k=2,3,4
+    
+    Arguments
+    :master_genes_lst: list of the list of list of hgsc genes for specified k
+    :master_name_lst: list of list of names for each k and respective cluster
+    
+    Output
+    :dataframe of pathway_name, pval, cluster, community for all community detection
+    methods and k values
+    
+    '''
     methods = ['fastgreedy', 'walktrap', 'infomap', 'multilevel']
     cols = ['pathway_name', 'pval', 'cluster', 'community', 'method']
     
@@ -129,6 +184,6 @@ def run_all_cd(master_genes_lst, master_namelst):
                 cd_df = cd_df.assign(method = m) 
                 master_df = master_df.append(cd_df, ignore_index=True)
         
-    #return master_df
     master_df.to_csv('./Data/master_cd_runs.csv', sep =',', index=False)
-        
+    
+run_all_cd(master_genes_lst, master_namelst)
