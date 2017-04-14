@@ -183,16 +183,19 @@ def cd_gea_pathways(all_genes_lst, all_names_lst, com_method, alpha=.05,
                 
                 relv_path_id = PATH_NAMES.index(community_melt_df.variable[0])
                 relv_path_genes = PATH_GENES[relv_path_id]
-                count_pos = 0
-                count_neg = 0
-                for gene in relv_path_genes: 
-                    if gene in cluster_pos_genes: 
-                        count_pos += 1
-                    elif gene in cluster_neg_genes: 
-                        count_neg += 1
-               
-                community_melt_df = community_melt_df.assign(num_pos_genes=count_pos)
-                community_melt_df = community_melt_df.assign(num_neg_genes=count_neg)
+                
+                path_pos = set(cluster_pos_genes).intersection(relv_path_genes)
+                path_neg = set(cluster_neg_genes).intersection(relv_path_genes)
+                
+                path_com_intersect = set(relv_path_genes).intersection(set(com))
+                
+                path_com_intersect_pos = set(cluster_pos_genes).intersection(path_com_intersect)
+                path_com_intersect_neg = set(cluster_neg_genes).intersection(path_com_intersect)
+                
+                community_melt_df = community_melt_df.assign(num_pos_genes_pw=len(path_pos))
+                community_melt_df = community_melt_df.assign(num_neg_genes_pw=len(path_neg))
+                community_melt_df = community_melt_df.assign(pw_com_overlap_pos=str(list(path_com_intersect_pos))).astype(object)
+                community_melt_df = community_melt_df.assign(pw_com_overlap_neg=str(list(path_com_intersect_neg))).astype(object)
             
             cluster_df = cluster_df.append(community_melt_df, ignore_index=True)
             
@@ -219,7 +222,8 @@ def run_all_cd(master_genes_lst, master_namelst):
     '''
     
     methods = ['fastgreedy', 'walktrap', 'infomap', 'multilevel']
-    cols = ['pathway_name', 'pval', 'cluster', 'community', 'method', 'num_pos_genes', 'num_neg_genes']
+    cols = ['pathway_name', 'pval', 'cluster', 'community', 'method', 'num_pos_genes_pw', 'num_neg_genes_pw'
+            'pw_com_overlap_pos', 'pw_com_overlap_neg']
     
     master_df = pd.DataFrame(columns=cols)
     
