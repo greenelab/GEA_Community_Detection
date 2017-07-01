@@ -19,12 +19,12 @@ from enrichment_testing import enrichment
 import pickle
 import pandas as pd
 
-ALL_GENES = pickle.load(open('PID_all_genes.pkl', 'r'))
-PATH_GENES = pickle.load(open('PID_path_genes.pkl', 'r'))
-PATH_NAMES = pickle.load(open('PID_path_names.pkl', 'r'))
-IMP_GENES = pickle.load(open('IMP_genes.pkl', 'r'))
+ALL_GENES = pickle.load(open('./Data/PID_all_genes.pkl', 'r'))
+PATH_GENES = pickle.load(open('./Data/PID_path_genes.pkl', 'r'))
+PATH_NAMES = pickle.load(open('./Data/PID_path_names.pkl', 'r'))
+IMP_GENES = pickle.load(open('./Data/IMP_genes.pkl', 'r'))
 
-hgsc = pd.read_csv('entrezid_hgsc.txt', sep='\t')
+hgsc = pd.read_csv('./Data/entrezid_hgsc.txt', sep='\t')
 
 hgsc.reset_index(level=0, inplace=True)
 
@@ -244,3 +244,6 @@ def run_all_cd(master_genes_lst, master_namelst):
     master_df.to_csv('./Data/master_cd_runs.csv', sep =',', index=False)
 
 run_all_cd(master_genes_lst, master_namelst)
+    
+if __name__ == '__main__': 
+    run_all_cd(master_genes_lst = master_genes_lst, master_namelst = master_namelst)
