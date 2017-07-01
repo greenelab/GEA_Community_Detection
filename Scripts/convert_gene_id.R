@@ -4,7 +4,7 @@
 # Usage:
 # Run in command line:
 #
-#       Rscript convert_gene_id.R
+#       Rscript Scripts/convert_gene_id.R
 #
 # Output:
 # Converts Gene Symbols to Entrezid and saves as tsv file. 
