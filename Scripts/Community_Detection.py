@@ -11,7 +11,6 @@ Description:
 Creates network from IMP and subgraph using m selected pathways
 
 """
-execfile('Enrichment_prep.py')
 
 # ---------------------------------------------------------------------------
 # Import packages and set seed
@@ -25,7 +24,7 @@ random.seed(123)
 # ---------------------------------------------------------------------------
 
 # read in IMP network
-IMP_NETWORK = igraph.Graph.Read_Ncol('global_filtered_short.txt', directed=False)
+IMP_NETWORK = igraph.Graph.Read_Ncol('./Data/global_filtered_short.txt', directed=False)
 
 # ---------------------------------------------------------------------------
 # Creates subgraph with genes from the m pathways
@@ -118,4 +117,4 @@ def index_to_edge_name(sub_com):
     return subcom_named_groups
 
 # saves IMP network weights locally
-WEIGHTS = weights()
+#WEIGHTS = weights()
