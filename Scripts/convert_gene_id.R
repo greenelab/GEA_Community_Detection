@@ -15,7 +15,7 @@
 
 library(org.Hs.eg.db)
 
-genes_df <- read.csv('hgsc_cluster_genes.tsv', sep = '\t', row.names = 1)
+genes_df <- read.csv("./Data/hgsc_cluster_genes.tsv", sep = "\t", row.names = 1)
 
 # list of all genes in the hgsc file
 all_genes <- row.names(genes_df)
@@ -53,4 +53,4 @@ mapping [is.na(mapping$ENTREZID),]$ENTREZID
 row.names(genes_df) <- mapping$ENTREZID
 
 # writes genes_df to tsv file
-write.table(genes_df, 'entrezid_hgsc.txt', sep = '\t')
+write.table(genes_df, "./Data/entrezid_hgsc.txt", sep = "\t")
