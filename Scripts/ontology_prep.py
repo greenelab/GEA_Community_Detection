@@ -4,7 +4,7 @@ Created on Thu Mar 31 21:58:59 2016
 
 @author: LiaHarrington
 
-Ontology_prep.py
+ontology_prep.py
 
 Usage:
 
