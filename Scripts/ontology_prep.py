@@ -13,7 +13,7 @@ Used to prepare data for use in enrichment_testing and community_detection
 Description:
 
 Prepares ontology data for enrichment and community detection analysis.
-First,it creates the list of list of genes in ontology and then it removes
+First, it creates the list of list of genes in ontology and then it removes
 any genes in KEGG but not in IMP. Read in and parse data into dictionary of
 pathways to form gene ontology. Saves path names in path names and all genes
 in each pathway as a list of list in path_genes. Assumes tab delination and
@@ -24,6 +24,7 @@ PATH_NAMES and PATH_GENES are created global variables.
 import pandas as pd
 import pickle 
 import sys
+import os 
 
 def prepare_ontology(ontology_filename, ontology): 
     '''
@@ -55,16 +56,14 @@ def prepare_ontology(ontology_filename, ontology):
     # Note ALL_GENES is also a global variable
     # ---------------------------------------------------------------------------
     
-
-    
+    file_name = os.path.join('Data', ontology_filename)
     try:
-        FHAND = open('./Data/{0}'.format(ontology_filename))
-    
-        for line in FHAND:
-            line = line.rstrip().split('\t')
-            PATH_NAMES.append(line[0])
-            PATH_GENES.append(line[2:len(line)])
-        FHAND.close()
+    	with open(ontology_file) as FHAND:
+    		for line in FHAND: 
+            	line = line.rstrip().split('\t')
+            	PATH_NAMES.append(line[0])
+            	PATH_GENES.append(line[2:len(line)])
+        	FHAND.close()
     except:
         print 'File not found.'
     
@@ -104,10 +103,17 @@ def prepare_ontology(ontology_filename, ontology):
     except:
         print 'Invalid edege-list.'
     
-    pickle.dump(PATH_GENES, open('./Data/{0}_path_genes.pkl'.format(ontology), 'w'))
-    pickle.dump(ALL_GENES, open('./Data/{0}_all_genes.pkl'.format(ontology), 'w'))
-    pickle.dump(PATH_NAMES, open('./Data/{0}_path_names.pkl'.format(ontology), 'w'))
-    pickle.dump(IMP_GENES, open('./Data/IMP_genes.pkl', 'w'))
+    path_genes_file = os.path.join('Data', '{0}_path_genes.pkl'.format(ontology))
+    pickle.dump(PATH_GENES, open(path_genes_file, 'w'))
+    
+    all_genes_file = os.path.join('Data', '{0}_all_genes.pkl'.format(ontology))
+    pickle.dump(ALL_GENES, open(all_genes_file, 'w'))
+    
+    path_names_file = os.path.join('Data', '{0}_path_names.pkl'.format(ontology))
+    pickle.dump(PATH_NAMES, open(path_names_file, 'w'))
+    
+    imp_genes_file = os.path.join('Data', 'IMP_genes.pkl')
+    pickle.dump(IMP_GENES, open(imp_genes_file, 'w'))
     
 if __name__ == '__main__': 
     ontology_filename = sys.argv[1]
