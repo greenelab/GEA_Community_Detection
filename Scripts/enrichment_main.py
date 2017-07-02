@@ -92,5 +92,5 @@ if __name__ == '__main__':
     
     data_generation(int(iterations), int(num_paths_min), int(num_paths_max), 
                     float(percent_min), float(percent_max), float(addit_min), 
-                         float(addit_max), str(file_name))
+                    float(addit_max), str(file_name))
     
