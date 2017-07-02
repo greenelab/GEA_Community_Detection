@@ -54,4 +54,5 @@ mapping [is.na(mapping$ENTREZID),]$ENTREZID
 row.names(genes_df) <- mapping$ENTREZID
 
 # writes genes_df to tsv file
-write.table(genes_df, "./Data/entrezid_hgsc.txt", sep = "\t")
+saved_file <- file.path("Data", "entrezid_hgsc.txt")
+write.table(genes_df, saved_file, sep = "\t")
