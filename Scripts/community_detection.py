@@ -17,6 +17,7 @@ Creates network from IMP and subgraph using m selected pathways
 # ---------------------------------------------------------------------------
 import random
 import igraph
+import os
 
 random.seed(123)
 # ---------------------------------------------------------------------------
@@ -24,7 +25,9 @@ random.seed(123)
 # ---------------------------------------------------------------------------
 
 # read in IMP network
-IMP_NETWORK = igraph.Graph.Read_Ncol('./Data/global_filtered_short.txt', directed=False)
+
+imp_file = os.path.join('Data', 'global_filtered_short.txt')
+IMP_NETWORK = igraph.Graph.Read_Ncol(imp_file, directed=False)
 
 # ---------------------------------------------------------------------------
 # Creates subgraph with genes from the m pathways
@@ -115,6 +118,3 @@ def index_to_edge_name(sub_com):
                      range(len(sub_com[group]))]
         subcom_named_groups.append(com_group)
     return subcom_named_groups
-
-# saves IMP network weights locally
-#WEIGHTS = weights()
