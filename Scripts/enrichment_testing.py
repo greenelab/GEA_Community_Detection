@@ -20,9 +20,13 @@ import numpy as np
 import pickle 
 import pandas as pd
 from community_detection import community_detection, index_to_edge_name
+import os
 
-ALL_GENES = pickle.load(open('./Data/PID_all_genes.pkl', 'r'))
-PATH_GENES = pickle.load(open('./Data/PID_path_genes.pkl', 'r'))
+all_genes_file = os.path.join('Data', 'PID_all_genes.pkl')
+ALL_GENES = pickle.load(open(all_genes_file, 'r'))
+
+path_genes_file = os.path.join('Data', 'PID_path_genes.pkl')
+PATH_GENES = pickle.load(open(path_genes_file, 'r'))
 
 def enrichment(gene_list, ontology, alpha, all_genes):
     '''
