@@ -15,7 +15,8 @@
 
 library(org.Hs.eg.db)
 
-genes_df <- read.csv("./Data/hgsc_cluster_genes.tsv", sep = "\t", row.names = 1)
+hgsc_gene_file <- file.path("Data", "hgsc_cluster_genes.tsv")
+genes_df <- read.csv(hgsc_gene_file, sep = "\t", row.names = 1)
 
 # list of all genes in the hgsc file
 all_genes <- row.names(genes_df)
