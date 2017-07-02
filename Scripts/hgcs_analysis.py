@@ -18,13 +18,22 @@ from community_detection import community_detection, index_to_edge_name
 from enrichment_testing import enrichment
 import pickle
 import pandas as pd
+import os
 
-ALL_GENES = pickle.load(open('./Data/PID_all_genes.pkl', 'r'))
-PATH_GENES = pickle.load(open('./Data/PID_path_genes.pkl', 'r'))
-PATH_NAMES = pickle.load(open('./Data/PID_path_names.pkl', 'r'))
-IMP_GENES = pickle.load(open('./Data/IMP_genes.pkl', 'r'))
+all_genes_file = os.path.join('Data', 'PID_all_genes.pkl')
+ALL_GENES = pickle.load(open(all_genes_file, 'r'))
 
-hgsc = pd.read_csv('./Data/entrezid_hgsc.txt', sep='\t')
+path_genes_file = os.join.path('Data', 'PID_path_genes.pkl')
+PATH_GENES = pickle.load(open(path_genes_file, 'r'))
+
+path_names_file = os.join.path('Data', 'PID_path_names.pkl')
+PATH_NAMES = pickle.load(open(path_names_file, 'r'))
+
+imp_file = os.join.path('Data', 'IMP_genes.pkl')
+IMP_GENES = pickle.load(open(imp_file, 'r'))
+
+hgsc_file = os.join.path('Data', 'entrezid_hgsc.txt')
+hgsc = pd.read_csv(hgsc_file, sep='\t')
 
 hgsc.reset_index(level=0, inplace=True)
 
