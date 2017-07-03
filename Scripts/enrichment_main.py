@@ -17,7 +17,9 @@ over the various # paths, % path, and % addit gene combinations as a tsv file
 
 import numpy as np
 import pandas as pd
+import sys
 from enrichment_testing import gea_performance
+import os
 
 def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
                     percent_max, addit_min, addit_max, file_name,
@@ -77,4 +79,20 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
 
     results_df = pd.DataFrame(results, columns=results_columns)
 
-    results_df.to_csv(file_name, index=False, sep='\t')
+    results_file = os.path.join('Data', filename)
+    results_df.to_csv(results_file, index=False, sep='\t')
+    
+if __name__ == '__main__': 
+    iterations = sys.argv[1]
+    num_paths_min = sys.argv[2]
+    num_paths_max = sys.argv[3]
+    percent_min = sys.argv[4]
+    percent_max = sys.argv[5]
+    addit_min = sys.argv[6]
+    addit_max = sys.argv[7]
+    file_name = sys.argv[8]
+    
+    data_generation(int(iterations), int(num_paths_min), int(num_paths_max), 
+                    float(percent_min), float(percent_max), float(addit_min), 
+                    float(addit_max), str(file_name))
+    

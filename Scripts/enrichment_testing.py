@@ -13,13 +13,20 @@ Description:
 
 """
 
-execfile('ontology_prep.py')  #  creates ALL_GENES and PATH_GENES
-
 import random
 import operator
 from scipy.stats import hypergeom
 import numpy as np
+import pickle 
+import pandas as pd
 from community_detection import community_detection, index_to_edge_name
+import os
+
+all_genes_file = os.path.join('Data', 'PID_all_genes.pkl')
+ALL_GENES = pickle.load(open(all_genes_file, 'r'))
+
+path_genes_file = os.path.join('Data', 'PID_path_genes.pkl')
+PATH_GENES = pickle.load(open(path_genes_file, 'r'))
 
 def enrichment(gene_list, ontology, alpha, all_genes):
     '''
@@ -162,16 +169,6 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
 
     for iteration in range(iterations):
         
-#    exp_type = 'ctr'
-#    num_paths = 1
-#    percent_path = .65
-#    percent_addit = .1
-#    ctr_method = 'ctr_all'
-#    com_method = None
-#    weights = None
-#    min_com_size = None
-#    alpha = .05
-
         selected_path_ids, gene_list = m_gene_list(num_paths, percent_path, percent_addit)
         set_selected_pathids = set(selected_path_ids)
 

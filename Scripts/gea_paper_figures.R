@@ -15,7 +15,7 @@ library(readr)
 library(ggplot2)
 
 data_file <- file.path("Data", "all_iterations_data.csv")
-iterations_df <- readr::read_csv("all_iterations_data.csv")
+iterations_df <- readr::read_csv(data_file)
 
 iterations_df <- dplyr::mutate(iterations_df, 
                                precision = (true_positive / (true_positive + false_positive)))
