@@ -1,4 +1,4 @@
 #!/bin/bash
-download_folder='data/'
+download_folder='Data/'
 
-wget -i data_urls.txt '--directory-prefix='$download_folder 
+wget -i Data/data_urls.txt '--directory-prefix='$download_folder
