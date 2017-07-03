@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import sys
 from enrichment_testing import gea_performance
+import os
 
 def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
                     percent_max, addit_min, addit_max, file_name,
@@ -78,7 +79,8 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
 
     results_df = pd.DataFrame(results, columns=results_columns)
 
-    results_df.to_csv('./Data/{0}'.format(file_name), index=False, sep='\t')
+	results_file = os.path.join('Data', '{0}'.format(file_name))
+    results_df.to_csv(results_file, index=False, sep='\t')
     
 if __name__ == '__main__': 
     iterations = sys.argv[1]
