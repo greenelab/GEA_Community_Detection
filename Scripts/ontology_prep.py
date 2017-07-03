@@ -58,12 +58,12 @@ def prepare_ontology(ontology_filename, ontology):
     
     file_name = os.path.join('Data', ontology_filename)
     try:
-    	with open(ontology_file) as FHAND:
-    		for line in FHAND: 
-            	line = line.rstrip().split('\t')
-            	PATH_NAMES.append(line[0])
-            	PATH_GENES.append(line[2:len(line)])
-        	FHAND.close()
+        with open(ontology_file) as FHAND:
+            for line in FHAND: 
+                line = line.rstrip().split('\t')
+                PATH_NAMES.append(line[0])
+                PATH_GENES.append(line[2:len(line)])
+                FHAND.close()
     except:
         print 'File not found.'
     
@@ -74,7 +74,8 @@ def prepare_ontology(ontology_filename, ontology):
     
     try:
         # read in all IMP genes
-        EDGE_LST = pd.read_table('./Data/global_average.filtered.txt', header=None)
+        edge_file = os.path.join('Data', 'global_average.filtered.txt')
+        EDGE_LST = pd.read_table(edge_file, header=None)
     
         # set of unique IMP genes
         IMP_GENES = set(EDGE_LST[0]).union(set(EDGE_LST[1]))
