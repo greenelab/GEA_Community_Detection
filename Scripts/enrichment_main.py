@@ -79,7 +79,7 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
 
     results_df = pd.DataFrame(results, columns=results_columns)
 
-	results_file = os.path.join('Data', '{0}'.format(file_name))
+    results_file = os.path.join('Data', filename)
     results_df.to_csv(results_file, index=False, sep='\t')
     
 if __name__ == '__main__': 
