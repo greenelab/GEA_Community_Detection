@@ -32,9 +32,9 @@ bash Scripts/gea_pipeline.sh
 
 ## Contact
 
-*About the code: [Lia Harrington](lia.x.harrington.gr@dartmouth.edu)
+* About the code: Lia Harrington (lia.x.harrington.gr@dartmouth.edu)
 
-*About the project or collaboration:
-[Jennifer Doherty](jennifer.a.doherty@dartmouth.edu) or
-[Casey Greene](csgreene@mail.med.upenn.edu).
+* About the project or collaboration: Jennifer Doherty
+(jennifer.a.doherty@dartmouth.edu) or
+Casey Greene at (csgreene@mail.med.upenn.edu).
 
