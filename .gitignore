@@ -1,3 +1,6 @@
-# Ignore all instances of DS_Store
-
 *.DS_Store
+Data/PID.Entrez.DB.txt
+Data/c2.cp.kegg.v5.1.entrez2.gmt.txt
+Data/c2.cp.reactome.v5.1.entrez.gmt.txt
+Data/human.filtered.dat.zip
+
