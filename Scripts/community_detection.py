@@ -26,7 +26,7 @@ random.seed(123)
 
 # read in IMP network
 
-imp_file = os.path.join('Data', 'global_filtered_short.txt')
+imp_file = os.path.join('Data', 'global_average.filtered.txt')
 IMP_NETWORK = igraph.Graph.Read_Ncol(imp_file, directed=False)
 
 # ---------------------------------------------------------------------------
