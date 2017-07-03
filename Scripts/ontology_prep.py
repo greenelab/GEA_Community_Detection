@@ -74,7 +74,7 @@ def prepare_ontology(ontology_filename, ontology):
     
     try:
         # read in all IMP genes
-        edge_file = os.path.join('Data', 'global_average.filtered.txt')
+        edge_file = os.path.join('Data', 'global_average.filtered.dat')
         EDGE_LST = pd.read_table(edge_file, header=None)
     
         # set of unique IMP genes
