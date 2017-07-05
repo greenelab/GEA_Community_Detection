@@ -14,6 +14,8 @@ is performed before enrichment analysis. In particular, one can select
 fastgreedy, walktrap, infomap, or multilevel as the possible clustering method.
 Again, power and average false positive are returned. 
 
+![GEA Flowchart](Paper_Figs/flow_chart.png?raw=true)
+
 ## Data Download
 
 Data for this project can be downloaded using the script and URL text file
