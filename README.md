@@ -16,19 +16,20 @@ Again, power and average false positive are returned.
 
 ![GEA Flowchart](Paper_Figs/flow_chart.png?raw=true)
 
-## Data Download
-
-Data for this project can be downloaded using the script and URL text file
-located in the Data Download Script folder. This is required before running the
-pipeline.
-
-```bash
-bash Data/data_files.sh
-```
+## Reproducibility
 
 To reproduce all analyses including simulations and HGSC applications:
 
 ```bash
+# Create and activate reproducible conda environment
+conda env create --force --file environment.yml
+source activate gea_community_detection
+
+# Data for this project can be downloaded using the script and URL text file
+# located in the Data folder. This is required before running the pipeline.
+bash Data/data_files.sh
+
+# Reproduce all results
 bash Scripts/gea_pipeline.sh
 ```
 

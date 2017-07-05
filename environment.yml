@@ -1,0 +1,13 @@
+name: gea_community_detection
+channels:
+- conda-forge
+- defaults
+dependencies:
+- anaconda::python=2.7.6
+- anaconda::pandas=0.19.2
+- anaconda::numpy=1.11.3
+- anaconda::numexpr=2.6.1
+- anaconda::scipy=0.18.1
+- anaconda::igraph=0.7.1
+- conda-forge::python-igraph=0.7.1.post6
+- anaconda::icu=58
