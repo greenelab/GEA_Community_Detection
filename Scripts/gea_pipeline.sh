@@ -6,7 +6,7 @@ set -o errexit
 ### -------- Simulation pipeline
 
 # Prepare KEGG ontology
-python Scripts/ontology_prep.py c2.cp.kegg.v5.1.entrez.gmt.txt KEGG
+python Scripts/ontology_prep.py c2.cp.kegg.v5.1.entrez2.gmt.txt KEGG
 
 # Run simulations
 python Scripts/enrichment_main.py 100 2 8 .3 1 .1 1 all_iterations_data.csv 
