@@ -1,4 +1,3 @@
 https://raw.githubusercontent.com/lharr/GEA_Data_Files/master/PID.Entrez.DB.txt
-https://raw.githubusercontent.com/lharr/GEA_Data_Files/master/c2.cp.kegg.v5.1.entrez2.gmt%20.txt
-https://raw.githubusercontent.com/lharr/GEA_Data_Files/master/c2.cp.reactome.v5.1.entrez.gmt.txt
-http://imp.princeton.edu/static/download/human.filtered.dat.zip
+https://raw.githubusercontent.com/lharr/GEA_Data_Files/master/c2.cp.kegg.v5.1.entrez2.gmt.txt
+https://zenodo.org/record/822470/files/human.filtered.dat.zip
