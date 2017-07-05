@@ -2,6 +2,7 @@ name: gea_community_detection
 channels:
 - conda-forge
 - defaults
+- bioconda
 dependencies:
 - anaconda::python=2.7.6
 - anaconda::pandas=0.19.2
@@ -9,5 +10,10 @@ dependencies:
 - anaconda::numexpr=2.6.1
 - anaconda::scipy=0.18.1
 - anaconda::igraph=0.7.1
-- conda-forge::python-igraph=0.7.1.post6
 - anaconda::icu=58
+- bioconda::bioconductor-org.hs.eg.db=3.3.0
+- conda-forge::python-igraph=0.7.1.post6
+- conda-forge::r-readr=1.1.0
+- conda-forge::r-ggplot2=2.2.1
+- conda-forge::r-cowplot=0.7.0
+- conda-forge::r-dplyr=0.5.0
