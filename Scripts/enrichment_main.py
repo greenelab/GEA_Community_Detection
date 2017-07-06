@@ -22,8 +22,8 @@ from enrichment_testing import gea_performance
 import os
 
 def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
-                    percent_max, addit_min, addit_max, file_name,
-                    weights=None, min_com_size=None, alpha=.05):
+                    percent_max, addit_min, addit_max, file_name, all_genes_filename,
+                    path_genes_filename, weights=None, min_com_size=None, alpha=.05):
     '''
     Description
     Calls gsea_performance() over desired number of iterations for each paramter
@@ -69,8 +69,9 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
             for percent_path in np.linspace(percent_min, percent_max, 5):
                 for percent_addit in np.linspace(addit_min, addit_max, 5):
                     res = gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
-                                          ctr_method=method, com_method=com_method, weights=None,
-                                          min_com_size=None, alpha=.05)
+                                          all_genes_filename, path_genes_filename,
+                                          ctr_method=method, com_method=com_method, 
+                                          weights=None, min_com_size=None, alpha=.05)
                     results = np.concatenate((results, res), axis=0)
 
     results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
@@ -79,7 +80,7 @@ def data_generation(iterations, num_paths_min, num_paths_max, percent_min,
 
     results_df = pd.DataFrame(results, columns=results_columns)
 
-    results_file = os.path.join('Data', filename)
+    results_file = os.path.join('Data', file_name)
     results_df.to_csv(results_file, index=False, sep='\t')
     
 if __name__ == '__main__': 
@@ -91,8 +92,10 @@ if __name__ == '__main__':
     addit_min = sys.argv[6]
     addit_max = sys.argv[7]
     file_name = sys.argv[8]
+    all_genes_filename = sys.argv[9]
+    path_genes_filename = sys.argv[10]
     
     data_generation(int(iterations), int(num_paths_min), int(num_paths_max), 
                     float(percent_min), float(percent_max), float(addit_min), 
-                    float(addit_max), str(file_name))
+                    float(addit_max), str(file_name), str(all_genes_filename), str(path_genes_filename))
     

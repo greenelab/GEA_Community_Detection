@@ -22,12 +22,6 @@ import pandas as pd
 from community_detection import community_detection, index_to_edge_name
 import os
 
-all_genes_file = os.path.join('Data', 'PID_all_genes.pkl')
-ALL_GENES = pickle.load(open(all_genes_file, 'r'))
-
-path_genes_file = os.path.join('Data', 'PID_path_genes.pkl')
-PATH_GENES = pickle.load(open(path_genes_file, 'r'))
-
 def enrichment(gene_list, ontology, alpha, all_genes):
     '''
     Description
@@ -84,7 +78,7 @@ def enrichment(gene_list, ontology, alpha, all_genes):
 # are any number between 0 and 1.
 # ---------------------------------------------------------------------------
 
-def m_gene_list(num_paths, percent_path, percent_addit):
+def m_gene_list(num_paths, percent_path, percent_addit, all_genes, path_genes):
     '''
     Description
     creates a gene list to input into the Enrichment function
@@ -99,14 +93,14 @@ def m_gene_list(num_paths, percent_path, percent_addit):
     :output geneList: the desired gene list with specified charateristics
     '''
 
-    selected_path_ids = random.sample(range(len(PATH_GENES)), num_paths)
+    selected_path_ids = random.sample(range(len(path_genes)), num_paths)
     gene_list = []
 
     for selected_path in selected_path_ids:
-        path = PATH_GENES[selected_path]
+        path = path_genes[selected_path]
         path = random.sample(path, int(float(percent_path)*len(path)))
         gene_list += path
-    gene_list += random.sample(ALL_GENES,
+    gene_list += random.sample(all_genes,
                                int(float(percent_addit)*len(gene_list)))
 
     return [selected_path_ids, gene_list]
@@ -130,8 +124,8 @@ def write_gene_list(gene_list, text_fh):
 
 
 def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit,
-                    ctr_method=None, com_method=None, weights=None,
-                    min_com_size=None, alpha=.05):
+					all_genes_filename, path_genes_filename, ctr_method=None, 
+					com_method=None, weights=None, min_com_size=None, alpha=.05):
     '''
     Description
     Simulation of N iterations of m chosen paths using n% of each path with a%
@@ -161,6 +155,12 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
 
     '''
     
+    all_genes_file = os.path.join('Data', all_genes_filename)
+    ALL_GENES = pickle.load(open(all_genes_file, 'r'))
+    
+    path_genes_file = os.path.join('Data', path_genes_filename)
+    PATH_GENES = pickle.load(open(path_genes_file, 'r'))
+    
     results_columns = ['iter_num', 'method', 'num_paths', 'percent_path', 'percent_addit',
                        'true_positive', 'false_positive', 'true_negative',
                        'false_negative']
@@ -169,7 +169,9 @@ def gea_performance(iterations, exp_type, num_paths, percent_path, percent_addit
 
     for iteration in range(iterations):
         
-        selected_path_ids, gene_list = m_gene_list(num_paths, percent_path, percent_addit)
+        selected_path_ids, gene_list = m_gene_list(num_paths, percent_path, 
+                                                   percent_addit, ALL_GENES, PATH_GENES,)
+        
         set_selected_pathids = set(selected_path_ids)
 
         if exp_type == 'exp':

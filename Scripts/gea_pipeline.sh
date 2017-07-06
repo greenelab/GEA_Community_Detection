@@ -9,7 +9,7 @@ set -o errexit
 python Scripts/ontology_prep.py c2.cp.kegg.v5.1.entrez2.gmt.txt KEGG
 
 # Run simulations
-python Scripts/enrichment_main.py 100 2 8 .3 1 .1 1 all_iterations_data.csv 
+python Scripts/enrichment_main.py 100 2 8 .3 1 .1 1 all_iterations_data.csv KEGG_all_genes.pkl KEGG_path_genes.pkl
 
 # Visualize results
 Rscript Scripts/gea_paper_figures.R
