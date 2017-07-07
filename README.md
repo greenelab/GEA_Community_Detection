@@ -3,16 +3,18 @@
 ## Summary
 
 This repository performs gene enrichment analysis using either the KEGG,
-Reactome, or PID ontologies. The experiment is set up to contain both a control
-and experimental arm where the control arm is enrichment of a gene list of m
-pathways using only n% of the genes in each pathway with a% additional random
+or PID ontologies. The experiment is set up to contain both a control
+and experimental arm where the control arm is enrichment of a gene list of *m*
+pathways using only *p*\% of the genes in each pathway with *a*\% additional random
 genes from the ontology. This gene list is then subjected to enrichment analysis
-and the relevant enriched pathways are determined. The overall power (or more
-precisely, the true positives) and average false positives are returned. The
-experimental condition is just like the control except that community detection
-is performed before enrichment analysis. In particular, one can select
-fastgreedy, walktrap, infomap, or multilevel as the possible clustering method.
-Again, power and average false positive are returned. 
+and the relevant enriched pathways are determined. The experimental condition is 
+just like the control except that community detection is performed before enrichment 
+analysis. In particular, one can select Fastgreedy, Walktrap, Infomap, or Multilevel 
+as the possible grouping method. For all methods, the F1-score,  false positive ratio, 
+and false negative ratio are returned.  
+
+All figures from the simulations are included in the Paper_Figs folder and results 
+from the simulations are included in the Data folder as all_iterations_data.csv. 
 
 ![GEA Flowchart](Paper_Figs/flow_chart.png?raw=true)
 
