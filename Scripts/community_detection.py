@@ -33,6 +33,7 @@ IMP_NETWORK = igraph.Graph.Read_Ncol(imp_file, directed=False)
 # Creates subgraph with genes from the m pathways
 # ---------------------------------------------------------------------------
 
+
 def weights():
     '''
     Description
@@ -55,6 +56,7 @@ def weights():
         weight = float(weight.rstrip().split()[0])
         imp_weights.append(weight)
     return imp_weights
+
 
 def community_detection(sub_genes, method, weights):
     '''
@@ -96,6 +98,7 @@ def community_detection(sub_genes, method, weights):
             sub_com = sub_s.community_multilevel()
 
     return sub_com
+
 
 def index_to_edge_name(sub_com):
     '''
