@@ -1,5 +1,7 @@
 # GEA_Community_Detection
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.830568.svg)](https://doi.org/10.5281/zenodo.830568)
+
 ## Summary
 
 This repository performs gene enrichment analysis using either the KEGG,
