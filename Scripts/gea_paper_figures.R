@@ -34,6 +34,20 @@ iterations_df <- iterations_df %>%
 
 method_names <- c("CtrAll", "CtrM", "Fastgreedy", "Infomap", "Multilevel", "Walktrap")
 
+iterations_df$percent_path <- dplyr::recode_factor(iterations_df$percent_path,
+                                                   "0.3" = "p = 0.3",
+                                                   "0.475" = "p = 0.475",
+                                                   "0.65" = "p = 0.65",
+                                                   "0.825" = "p = 0.825",
+                                                   "1" = "p = 1")
+
+iterations_df$percent_addit <- dplyr::recode_factor(iterations_df$percent_addit,
+                                                    "0.1" = "a = 0.1",
+                                                    "0.325" = "a = 0.325",
+                                                    "0.55" = "a = 0.55",
+                                                    "0.775" = "a = 0.775",
+                                                    "1" = "a = 1")
+
 plot_f1 <- function(m, a_min, a_max, iterations_df){
   # m = number of paths
   # a_min = min percent additional
@@ -49,7 +63,7 @@ plot_f1 <- function(m, a_min, a_max, iterations_df){
     geom_boxplot(aes(fill = method)) +
     facet_grid(percent_addit ~ percent_path) + ylab("F1 Score") +
     theme(axis.title.x = element_blank(), axis.text.x = element_blank(), 
-          axis.ticks.x = element_blank()) +
+          axis.ticks.x = element_blank()) + labs(title = paste0("m = ", m)) + 
     xlab(" ") + scale_fill_discrete(name = "Method", labels = method_names)
   
   figure_name <- file.path("Paper_Figs", paste0("f1_boxplots_", m, ".png"))
@@ -60,7 +74,7 @@ plot_f1 <- function(m, a_min, a_max, iterations_df){
 # percent pathway = .3, .475, .65, .825 and 1.0
 
 for (m in 2:8) {
-  plot_f1(m, .1, 1, iterations_df)
+  plot_f1(m, "a = 0.1", "a = 1", iterations_df)
 } 
   
 plot_fnr <- function(m, a_min, a_max, iterations_df){
@@ -75,14 +89,14 @@ plot_fnr <- function(m, a_min, a_max, iterations_df){
     geom_boxplot(aes(fill = method)) +
     facet_grid(percent_addit ~ percent_path) + ylab("False Negative Proportion") +
     theme(axis.title.x = element_blank(), axis.text.x = element_blank(), 
-          axis.ticks.x = element_blank()) +
+          axis.ticks.x = element_blank()) + labs(title = paste0("m = ", m)) + 
     xlab(" ") + scale_fill_discrete(name = "Method", labels = method_names)
   
   figure_name <- file.path("Paper_Figs", paste0("fnr_boxplots_", m, ".png"))
   ggsave(filename = figure_name, plot = p, height = 10, width = 11.5)
 }   
   
-plot_fnr(4, .1, 1, iterations_df)  
+plot_fnr(4, "a = 0.1", "a = 1", iterations_df)  
   
 plot_fpr <- function(m, a_min, a_max, iterations_df){
   # plots false positive rate
@@ -96,11 +110,11 @@ plot_fpr <- function(m, a_min, a_max, iterations_df){
     geom_boxplot(aes(fill = method)) +
     facet_grid(percent_addit ~ percent_path) + ylab("False Positive Proportion") +
     theme(axis.title.x = element_blank(), axis.text.x = element_blank(), 
-          axis.ticks.x = element_blank()) +
+          axis.ticks.x = element_blank()) + labs(title = paste0("m = ", m)) + 
     xlab(" ") + scale_fill_discrete(name = "Method", labels = method_names)
   
   figure_name <- file.path("Paper_Figs", paste0("fpr_boxplots_", m, ".png"))
   ggsave(filename = figure_name, plot = p, height = 10, width = 11.5)
 }  
   
-plot_fpr(4, .1, 1, iterations_df)
+plot_fpr(4, "a = 0.1", "a = 1", iterations_df)
