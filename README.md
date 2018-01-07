@@ -5,7 +5,7 @@
 ## Summary
 
 This repository performs gene enrichment analysis using either the KEGG,
-or PID ontologies. The experiment is set up to contain both a control
+or PID databases. The experiment is set up to contain both a control
 and experimental arm where the control arm is enrichment of a gene list of *m*
 pathways using only *p*\% of the genes in each pathway with *a*\% additional random
 genes from the ontology. This gene list is then subjected to enrichment analysis
